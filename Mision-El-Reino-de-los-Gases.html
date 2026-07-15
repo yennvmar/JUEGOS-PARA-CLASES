@@ -1,0 +1,3305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Misión: El Reino de los Gases</title>
+<link rel="icon" href="data:,">
+<style>
+/* ============================================================
+   MISIÓN: EL REINO DE LOS GASES
+   Juego educativo de repaso — Ciencias Naturales, grado 8°
+   Estética voxel original (bloques, minería, exploración)
+   ============================================================ */
+:root{
+  --sky1:#4FA8E8; --sky2:#BCE4FA;
+  --grass:#63B23A; --grass-l:#8FD75E; --grass-d:#3E7A20;
+  --dirt:#96613A;  --dirt-l:#B8804F;  --dirt-d:#6B4224;
+  --stone:#9C9C9C; --stone-l:#C6C6C6; --stone-d:#5F5F5F;
+  --wood:#B07B46;  --wood-l:#D6A263;  --wood-d:#7A5127;
+  --dark:#241A10;  --paper:#F8ECD2;   --paper-d:#E4D2AC;
+  --gold:#FFC93A;  --crystal:#43E8C6; --lava:#FF6B35;
+  --night:#141B33;
+  --ok:#3FA34D; --bad:#D8494E;
+  --t-red:#E5533D; --t-blue:#3E7BFA; --t-green:#39A845;
+  --t-yellow:#EFAF1F; --t-purple:#9B59B6; --t-orange:#FF8C42;
+  --void:#07111f; --deep:#0b1730; --glass:rgba(10,24,44,.72);
+  --glass-2:rgba(16,35,61,.86); --line:rgba(131,232,220,.32);
+  --glow:#56ffe0; --violet:#8c62ff; --temp:#ff8a3d; --leaf:#61e29c;
+  --radius:8px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{height:100%;}
+body{
+  font-family:"Trebuchet MS","Segoe UI",Verdana,sans-serif;
+  background:linear-gradient(var(--sky1),var(--sky2) 70%,var(--grass-l));
+  color:var(--dark);
+  overflow-x:hidden;
+  min-height:100%;
+  image-rendering:pixelated;
+}
+h1,h2,h3,.blocky{
+  font-family:"Arial Black","Trebuchet MS",sans-serif;
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+.pixel-title{
+  color:#fff;
+  text-shadow:3px 3px 0 var(--dark), -2px -2px 0 rgba(0,0,0,.25);
+}
+/* -------- biseles tipo bloque -------- */
+.bevel{border:4px solid; border-color:var(--wood-l) var(--wood-d) var(--wood-d) var(--wood-l); background:var(--wood);}
+.bevel-stone{border:4px solid; border-color:var(--stone-l) var(--stone-d) var(--stone-d) var(--stone-l); background:var(--stone);}
+.bevel-paper{border:4px solid; border-color:#fff var(--paper-d) var(--paper-d) #fff; background:var(--paper);}
+.card{
+  background:var(--paper);
+  border:5px solid var(--dark);
+  box-shadow:0 8px 0 rgba(0,0,0,.28);
+  padding:18px;
+}
+/* -------- botones -------- */
+.btn{
+  display:inline-block;
+  font-family:"Arial Black",sans-serif;
+  font-size:1rem;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:#fff;
+  text-shadow:2px 2px 0 rgba(0,0,0,.45);
+  background:var(--grass);
+  border:4px solid;
+  border-color:var(--grass-l) var(--grass-d) var(--grass-d) var(--grass-l);
+  padding:12px 22px;
+  cursor:pointer;
+  transition:transform .06s;
+  user-select:none;
+}
+.btn:hover{filter:brightness(1.08);}
+.btn:active{transform:translateY(3px);}
+.btn:focus-visible{outline:4px dashed var(--gold); outline-offset:2px;}
+.btn.stone{background:var(--stone); border-color:var(--stone-l) var(--stone-d) var(--stone-d) var(--stone-l);}
+.btn.wood{background:var(--wood); border-color:var(--wood-l) var(--wood-d) var(--wood-d) var(--wood-l);}
+.btn.red{background:var(--bad); border-color:#F08A8D #96262B #96262B #F08A8D;}
+.btn.gold{background:var(--gold); color:var(--dark); text-shadow:1px 1px 0 rgba(255,255,255,.5); border-color:#FFE28A #B8860B #B8860B #FFE28A;}
+.btn.small{font-size:.78rem; padding:7px 12px; border-width:3px;}
+.btn:disabled{opacity:.45; cursor:not-allowed; transform:none;}
+/* -------- pantallas -------- */
+.screen{display:none; min-height:100vh; padding:16px;}
+.screen.active{display:block;}
+/* ============ PANTALLA DE INICIO / CONFIGURACIÓN ============ */
+#screen-setup{max-width:1100px; margin:0 auto;}
+.title-wrap{text-align:center; padding:20px 0 8px;}
+.title-wrap h1{font-size:clamp(1.6rem,4.5vw,3.2rem);}
+.title-wrap .sub{color:#fff; text-shadow:2px 2px 0 rgba(0,0,0,.4); font-weight:bold; margin-top:6px;}
+.title-blocks{display:flex; justify-content:center; gap:6px; margin:14px 0;}
+.tblock{width:34px; height:34px; border:3px solid rgba(0,0,0,.35); animation:float 2.6s ease-in-out infinite;}
+.tblock:nth-child(2){animation-delay:.3s}.tblock:nth-child(3){animation-delay:.6s}
+.tblock:nth-child(4){animation-delay:.9s}.tblock:nth-child(5){animation-delay:1.2s}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.setup-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:10px;}
+@media(max-width:820px){.setup-grid{grid-template-columns:1fr;}}
+.field{margin-bottom:12px;}
+.field label{display:block; font-weight:bold; margin-bottom:5px;}
+.field input[type=text], .field select{
+  width:100%; padding:9px; font-size:1rem; font-family:inherit;
+  border:3px solid var(--dark); background:#fff;
+}
+.chips{display:flex; flex-wrap:wrap; gap:8px;}
+.chip{
+  padding:8px 14px; border:3px solid var(--dark); background:#fff;
+  cursor:pointer; font-weight:bold; user-select:none;
+}
+.chip.on{background:var(--grass); color:#fff; text-shadow:1px 1px 0 rgba(0,0,0,.4);}
+.chip:focus-visible{outline:3px dashed var(--gold);}
+.team-name-row{display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+.team-dot{width:26px; height:26px; border:3px solid var(--dark); flex:none;}
+.setup-actions{text-align:center; margin:22px 0 40px;}
+.story-box{font-size:.98rem; line-height:1.5;}
+.story-box strong{color:#7A3B12;}
+/* ============ PANTALLA DE JUEGO ============ */
+#screen-game{padding:8px 10px;}
+.hud{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:stretch;
+  margin-bottom:8px;
+}
+.hud-clock{
+  min-width:150px; text-align:center; padding:6px 14px;
+  background:var(--dark); color:var(--gold);
+  border:4px solid; border-color:#4a3a26 #000 #000 #4a3a26;
+  display:flex; flex-direction:column; justify-content:center;
+}
+.hud-clock .time{font-size:1.7rem; font-family:"Courier New",monospace; font-weight:bold;}
+.hud-clock .lbl{font-size:.68rem; text-transform:uppercase; letter-spacing:1px;}
+.hud-teams{flex:1; display:flex; flex-wrap:wrap; gap:8px;}
+.team-card{
+  flex:1; min-width:135px; padding:6px 8px;
+  background:var(--paper); border:4px solid var(--dark);
+  position:relative;
+}
+.team-card.turn{outline:5px solid var(--gold); animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{outline-color:var(--gold)}50%{outline-color:#fff}}
+.team-card .tname{font-weight:bold; font-size:.92rem; display:flex; align-items:center; gap:6px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;}
+.team-card .tname .team-dot{width:16px;height:16px;border-width:2px;}
+.team-card .tstats{display:flex; gap:10px; font-size:.86rem; margin-top:3px; flex-wrap:wrap;}
+.team-card .mats{font-size:.8rem; margin-top:2px; min-height:1em;}
+.hud-btns{display:flex; flex-direction:column; gap:6px; justify-content:center;}
+/* tablero */
+.board-wrap{display:flex; gap:10px; align-items:stretch;}
+#board{
+  position:relative;
+  flex:1;
+  display:grid;
+  gap:6px;
+  background:rgba(0,0,0,.14);
+  padding:10px;
+  border:5px solid var(--dark);
+  min-height:520px;
+}
+.tile{
+  position:relative;
+  border:4px solid rgba(0,0,0,.4);
+  display:flex; align-items:center; justify-content:center;
+  font-size:clamp(1rem,2.4vw,1.9rem);
+  cursor:default;
+  min-height:56px;
+}
+.tile .tnum{
+  position:absolute; top:1px; left:3px; font-size:.6rem; font-weight:bold;
+  color:rgba(0,0,0,.55);
+}
+.tile.active-tile{outline:5px solid #fff; z-index:3; animation:pulse 1s infinite;}
+.board-center{
+  position:absolute;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:10px; text-align:center; padding:12px;
+}
+.board-center .biome-icons{font-size:2rem; letter-spacing:8px;}
+.board-center .turn-banner{
+  background:var(--paper); border:4px solid var(--dark);
+  padding:10px 16px; font-weight:bold; font-size:1.15rem; max-width:90%;
+}
+.dice-area{display:flex; align-items:center; gap:14px;}
+#dice{
+  width:74px; height:74px; background:#fff;
+  border:5px solid var(--dark);
+  display:flex; align-items:center; justify-content:center;
+  font-size:2.4rem; font-weight:bold; font-family:"Arial Black";
+  box-shadow:0 6px 0 rgba(0,0,0,.3);
+}
+#dice.rolling{animation:shake .1s infinite;}
+@keyframes shake{0%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}100%{transform:rotate(-6deg)}}
+/* fichas de equipos */
+.token{
+  position:absolute; width:24px; height:24px;
+  border:3px solid rgba(0,0,0,.55);
+  z-index:5;
+  transition:left .5s, top .5s;
+  box-shadow:0 3px 0 rgba(0,0,0,.35);
+}
+.token::before{ /* ojos del personaje voxel */
+  content:""; position:absolute; top:5px; left:3px;
+  width:4px; height:5px; background:#fff;
+  box-shadow:8px 0 0 #fff;
+}
+/* leyenda */
+.legend{
+  display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:8px;
+  background:rgba(255,255,255,.75); border:3px solid var(--dark);
+  padding:6px 10px; font-size:.8rem;
+}
+.legend span{white-space:nowrap;}
+/* ============ MODAL DE PREGUNTA ============ */
+.overlay{
+  display:none;
+  position:fixed; inset:0; z-index:50;
+  background:rgba(10,14,30,.72);
+  align-items:center; justify-content:center;
+  padding:14px;
+}
+.overlay.open{display:flex;}
+.qmodal{
+  width:min(980px,100%);
+  max-height:94vh; overflow-y:auto;
+  background:var(--paper);
+  border:6px solid var(--dark);
+  box-shadow:0 12px 0 rgba(0,0,0,.4);
+}
+.qhead{
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:10px 16px; color:#fff;
+  text-shadow:2px 2px 0 rgba(0,0,0,.4);
+  border-bottom:5px solid var(--dark);
+  flex-wrap:wrap;
+}
+.qhead .qtag{font-family:"Arial Black"; text-transform:uppercase; font-size:1.05rem;}
+.qtimer{
+  background:var(--dark); color:var(--gold);
+  font-family:"Courier New",monospace; font-weight:bold; font-size:1.4rem;
+  padding:4px 14px; border:3px solid #000;
+}
+.qtimer.low{color:#FF6B6B; animation:pulse 0.6s infinite;}
+.qbody{padding:20px 24px;}
+.qtext{font-size:clamp(1.15rem,2.2vw,1.6rem); line-height:1.45; font-weight:bold;}
+.qpts{margin-top:6px; font-size:.95rem; color:#7A3B12; font-weight:bold;}
+.opts{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:18px;}
+@media(max-width:700px){.opts{grid-template-columns:1fr;}}
+.opt{
+  text-align:left; font-size:1.08rem; font-family:inherit;
+  padding:14px; background:#fff; border:4px solid var(--dark);
+  cursor:pointer; line-height:1.35;
+}
+.opt:hover{background:#FFF3CE;}
+.opt .letter{
+  display:inline-block; width:30px; height:30px; line-height:26px; text-align:center;
+  background:var(--wood); color:#fff; border:3px solid var(--wood-d);
+  font-weight:bold; margin-right:8px;
+}
+.opt.sel-ok{background:#D7F5DC; border-color:var(--ok);}
+.opt.sel-bad{background:#FBDCDC; border-color:var(--bad);}
+.opt:disabled{cursor:default;}
+.num-answer{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; align-items:center;}
+.num-answer input{
+  font-size:1.4rem; padding:10px; width:180px;
+  border:4px solid var(--dark); font-family:"Courier New",monospace;
+}
+.num-answer .unit{font-weight:bold; font-size:1.2rem;}
+/* ordenar pasos */
+.order-list{margin-top:16px; display:flex; flex-direction:column; gap:8px;}
+.order-item{
+  display:flex; align-items:center; gap:10px;
+  background:#fff; border:4px solid var(--dark); padding:10px 12px;
+  cursor:pointer; font-size:1.05rem;
+}
+.order-item .onum{
+  width:30px; height:30px; flex:none; text-align:center; line-height:26px;
+  background:var(--stone); color:#fff; font-weight:bold; border:3px solid var(--stone-d);
+}
+.order-item.picked{opacity:.45; cursor:default;}
+.order-picked{margin-top:12px; font-weight:bold; min-height:1.4em;}
+/* dibujo de partículas */
+.pboxes{display:flex; gap:20px; flex-wrap:wrap; justify-content:center; margin-top:16px;}
+.pbox-wrap{text-align:center; font-weight:bold;}
+.pbox{
+  width:150px; height:150px; position:relative;
+  background:#EAF6FF; border:5px solid var(--dark); overflow:hidden;
+  margin-bottom:6px;
+}
+.pdot{
+  position:absolute; width:12px; height:12px; border-radius:50%;
+  background:#2B6CB0; border:2px solid #1A4570;
+}
+.pdot.hot{background:var(--lava); border-color:#A33812; animation:jig .35s infinite alternate;}
+.pdot.slow{animation:jig 1.4s infinite alternate;}
+@keyframes jig{from{transform:translate(0,0)}to{transform:translate(4px,-4px)}}
+/* verdadero / falso */
+.vf-btns{display:flex; gap:16px; margin-top:18px; justify-content:center; flex-wrap:wrap;}
+/* zona docente de valoración oral */
+.judge-box{
+  margin-top:18px; padding:12px; background:#FFF6DE;
+  border:4px dashed var(--wood-d);
+}
+.judge-box .jtitle{font-weight:bold; margin-bottom:8px;}
+.judge-btns{display:flex; gap:10px; flex-wrap:wrap;}
+/* feedback */
+.feedback{
+  margin-top:18px; padding:14px 16px; border:5px solid;
+  font-size:1.05rem; line-height:1.5; display:none;
+}
+.feedback.ok{display:block; background:#E4F8E8; border-color:var(--ok);}
+.feedback.bad{display:block; background:#FCE7E7; border-color:var(--bad);}
+.feedback .fb-title{font-family:"Arial Black"; text-transform:uppercase; margin-bottom:6px;}
+.feedback ol{margin:8px 0 0 22px;}
+.feedback ol li{margin-bottom:4px;}
+.hint-box{
+  display:none; margin-top:12px; padding:10px 14px;
+  background:#FFF1C9; border:4px solid var(--gold); font-size:1rem;
+}
+.hint-box.show{display:block;}
+.qfoot{
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:12px 20px; border-top:5px solid var(--dark);
+  background:var(--paper-d); flex-wrap:wrap;
+}
+/* ============ COFRE / CONSTRUCCIÓN / EVENTOS ============ */
+.center-modal{
+  width:min(680px,100%); background:var(--paper);
+  border:6px solid var(--dark); box-shadow:0 12px 0 rgba(0,0,0,.4);
+  padding:26px; text-align:center;
+}
+.center-modal h2{margin-bottom:12px;}
+.big-emoji{font-size:3.4rem; margin:8px 0;}
+.build-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin:16px 0; text-align:left;}
+.build-item{background:#fff; border:4px solid var(--dark); padding:10px;}
+.build-item .bname{font-weight:bold;}
+.build-item .bcost{font-size:.86rem; margin:4px 0;}
+.build-item .built-tag{color:var(--ok); font-weight:bold;}
+/* noche de partículas */
+.night .qmodal, .night .center-modal{background:#1E2747; color:#EAF0FF;}
+.night .qtext,.night h2{color:#fff;}
+/* ============ JEFE FINAL ============ */
+#screen-boss{max-width:1000px; margin:0 auto;}
+.boss-card{background:var(--night); color:#fff; border:6px solid #000; padding:22px; box-shadow:0 10px 0 rgba(0,0,0,.45);}
+.boss-title{text-align:center; color:var(--lava); text-shadow:3px 3px 0 #000; font-size:clamp(1.4rem,3.5vw,2.4rem);}
+.boss-art{text-align:center; font-size:4rem; margin:10px 0; animation:float 2.4s infinite;}
+.hpbar-wrap{background:#000; border:4px solid #555; height:34px; margin:12px 0;}
+.hpbar{height:100%; background:linear-gradient(var(--lava),#B23A10); transition:width .6s; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; text-shadow:1px 1px 0 #000;}
+.boss-q{background:var(--paper); color:var(--dark); border:5px solid #000; padding:18px; margin-top:14px;}
+.boss-teams{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+.boss-team-btn{
+  padding:10px 14px; border:4px solid var(--dark); font-weight:bold; cursor:pointer;
+  background:#fff; font-family:inherit; font-size:.95rem;
+}
+.boss-team-btn.hit{background:var(--ok); color:#fff;}
+/* ============ INFORME FINAL ============ */
+#screen-report{max-width:1000px; margin:0 auto;}
+.podium{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0;}
+.podium .team-card{min-width:200px;}
+.report-topic{margin:10px 0;}
+.report-topic .rt-label{display:flex; justify-content:space-between; font-weight:bold; margin-bottom:3px;}
+.rt-bar-bg{background:#D8C9A5; border:3px solid var(--dark); height:26px;}
+.rt-bar{height:100%; display:flex; align-items:center; padding-left:8px; color:#fff; font-weight:bold; font-size:.85rem; text-shadow:1px 1px 0 rgba(0,0,0,.5); min-width:fit-content;}
+.reinforce{background:#FFF1C9; border:4px solid var(--gold); padding:12px 16px; margin-top:14px;}
+table.rtable{width:100%; border-collapse:collapse; margin-top:12px; background:#fff;}
+table.rtable th, table.rtable td{border:3px solid var(--dark); padding:7px 9px; text-align:center; font-size:.95rem;}
+table.rtable th{background:var(--wood); color:#fff; text-shadow:1px 1px 0 rgba(0,0,0,.4);}
+/* ============ PANEL DOCENTE ============ */
+#teacher-fab{
+  position:fixed; right:14px; bottom:14px; z-index:80;
+  width:56px; height:56px; font-size:1.5rem;
+  background:var(--dark); color:var(--gold);
+  border:4px solid var(--gold); cursor:pointer;
+}
+#teacher-panel{
+  position:fixed; top:0; right:-360px; width:340px; height:100vh; z-index:90;
+  background:var(--dark); color:var(--paper);
+  border-left:6px solid var(--gold);
+  transition:right .3s; padding:16px; overflow-y:auto;
+}
+#teacher-panel.open{right:0;}
+#teacher-panel h3{color:var(--gold); margin-bottom:10px;}
+#teacher-panel .tp-group{margin-bottom:16px; border-bottom:2px solid #4a3a26; padding-bottom:12px;}
+#teacher-panel .btn{width:100%; margin-bottom:6px; font-size:.8rem; padding:8px;}
+#teacher-panel select,#teacher-panel input{
+  width:100%; padding:6px; margin-bottom:6px; font-family:inherit;
+  border:2px solid var(--gold); background:#3a2d1c; color:#fff;
+}
+.tp-perf{font-size:.8rem; line-height:1.5;}
+/* toast */
+#toast{
+  position:fixed; left:50%; bottom:22px; transform:translateX(-50%) translateY(120px);
+  background:var(--dark); color:#fff; padding:12px 22px; z-index:120;
+  border:4px solid var(--gold); font-weight:bold; transition:transform .3s;
+  max-width:90vw; text-align:center;
+}
+#toast.show{transform:translateX(-50%) translateY(0);}
+/* ============================================================
+   REDISEÑO VISUAL 2026: aventura científica voxel
+   ============================================================ */
+body{
+  font-family:"Segoe UI Variable","Segoe UI",Inter,Arial,sans-serif;
+  color:#eef7ff;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(86,255,224,.22), transparent 25%),
+    radial-gradient(circle at 86% 18%, rgba(255,138,61,.2), transparent 24%),
+    linear-gradient(145deg, #061120 0%, #0b1830 43%, #123e43 72%, #1a5036 100%);
+  image-rendering:auto;
+}
+body::before,
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-2;
+}
+body::before{
+  background:
+    linear-gradient(115deg, rgba(86,255,224,.08), transparent 34%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 86px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 74px);
+  opacity:.65;
+}
+body::after{
+  background:
+    linear-gradient(180deg, transparent 0 58%, rgba(4,8,16,.35) 100%),
+    radial-gradient(ellipse at 50% 100%, rgba(77,255,184,.18), transparent 56%);
+  z-index:-1;
+}
+.screen{
+  position:relative;
+  isolation:isolate;
+}
+.screen::before{
+  content:"";
+  position:fixed;
+  inset:auto -8vw -18vh -8vw;
+  height:42vh;
+  pointer-events:none;
+  z-index:-1;
+  background:
+    linear-gradient(135deg, transparent 0 18%, rgba(98,226,156,.22) 18% 22%, transparent 22% 42%, rgba(86,255,224,.14) 42% 46%, transparent 46%),
+    linear-gradient(45deg, rgba(40,84,76,.7), rgba(7,17,31,.1));
+  transform:skewY(-3deg);
+  filter:drop-shadow(0 -18px 26px rgba(0,0,0,.28));
+}
+h1,h2,h3,.blocky{
+  font-family:"Segoe UI Black","Arial Black","Segoe UI",sans-serif;
+  letter-spacing:0;
+}
+.pixel-title{
+  color:#f7fbff;
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.38),
+    0 0 22px rgba(86,255,224,.42),
+    0 0 44px rgba(140,98,255,.34);
+}
+.card,
+.team-card,
+.boss-card,
+.boss-q,
+.center-modal,
+.qmodal,
+.story-box{
+  border:1px solid rgba(143,233,255,.24);
+  border-radius:var(--radius);
+  background:
+    linear-gradient(145deg, rgba(16,35,61,.9), rgba(9,18,34,.82)),
+    radial-gradient(circle at 16% 0, rgba(86,255,224,.2), transparent 36%);
+  color:#f3f8ff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.16),
+    inset 0 -16px 38px rgba(0,0,0,.18),
+    0 18px 45px rgba(0,0,0,.34);
+  backdrop-filter:blur(12px);
+}
+.card h2,.card h3,.story-box h3{color:#bdfdff;}
+.story-box strong{color:#ffe087;}
+.btn{
+  border:1px solid rgba(255,255,255,.18);
+  border-bottom:4px solid rgba(0,0,0,.42);
+  border-radius:8px;
+  background:
+    linear-gradient(180deg, rgba(112,255,196,.95), rgba(33,150,116,.96));
+  color:#061120;
+  text-shadow:none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    0 8px 18px rgba(0,0,0,.25),
+    0 0 18px rgba(86,255,224,.16);
+  transition:transform .16s ease, filter .16s ease, box-shadow .16s ease;
+}
+.btn:hover{
+  filter:brightness(1.08) saturate(1.06);
+  transform:translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.6),
+    0 12px 24px rgba(0,0,0,.28),
+    0 0 24px rgba(86,255,224,.28);
+}
+.btn:active{transform:translateY(2px);}
+.btn.stone{
+  background:linear-gradient(180deg, #c9d7e8, #6f8093);
+  color:#07111f;
+}
+.btn.wood{
+  background:linear-gradient(180deg, #f1b875, #9c6638);
+  color:#16100a;
+}
+.btn.red{
+  background:linear-gradient(180deg, #ff8b7d, #cc314c);
+  color:#fff;
+  text-shadow:0 1px 0 rgba(0,0,0,.35);
+}
+.btn.gold{
+  background:linear-gradient(180deg, #fff29a, #ffbe28);
+  color:#211700;
+}
+.btn.small{border-width:1px 1px 3px; min-height:40px;}
+#screen-setup{
+  max-width:1180px;
+  padding-top:24px;
+}
+.title-wrap{
+  position:relative;
+  min-height:310px;
+  display:grid;
+  place-items:center;
+  padding:28px 18px 34px;
+  overflow:hidden;
+  border:1px solid rgba(143,233,255,.18);
+  border-radius:8px;
+  background:
+    linear-gradient(180deg, rgba(11,28,55,.55), rgba(8,18,34,.88)),
+    linear-gradient(115deg, rgba(87,226,156,.22), transparent 38%, rgba(255,138,61,.18));
+  box-shadow:0 24px 60px rgba(0,0,0,.36);
+}
+.title-wrap::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(135deg, transparent 0 12%, rgba(97,226,156,.18) 12% 16%, transparent 16% 35%, rgba(86,255,224,.14) 35% 39%, transparent 39%),
+    linear-gradient(45deg, transparent 0 58%, rgba(255,138,61,.16) 58% 62%, transparent 62%);
+  transform:translateY(28px) skewY(-4deg);
+}
+.title-wrap::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 28% 36%, rgba(86,255,224,.26), transparent 3px),
+    radial-gradient(circle at 54% 22%, rgba(255,224,135,.28), transparent 3px),
+    radial-gradient(circle at 72% 48%, rgba(255,138,61,.22), transparent 3px),
+    radial-gradient(circle at 40% 66%, rgba(140,98,255,.25), transparent 3px);
+  background-size:180px 120px;
+  animation:particleDrift 9s linear infinite;
+}
+.title-wrap h1,
+.title-wrap .sub,
+.title-blocks,
+.hero-world,
+.hero-actions,
+.hero-party{
+  position:relative;
+  z-index:2;
+}
+.title-wrap h1{font-size:clamp(2.3rem,5.5vw,5rem); max-width:980px; line-height:1.02;}
+.title-wrap .sub{font-size:clamp(1rem,1.8vw,1.35rem); color:#d9f7ff; text-shadow:0 2px 0 rgba(0,0,0,.28);}
+.title-blocks{gap:10px; margin:0 0 16px;}
+.tblock{
+  width:44px;
+  height:44px;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:6px;
+  box-shadow:
+    inset 9px 9px 0 rgba(255,255,255,.16),
+    inset -10px -10px 0 rgba(0,0,0,.18),
+    0 10px 20px rgba(0,0,0,.28);
+  transform:rotateX(58deg) rotateZ(45deg);
+  image-rendering:auto;
+}
+.hero-world{
+  width:min(920px,96%);
+  min-height:150px;
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  perspective:900px;
+}
+.hero-biome{
+  min-height:128px;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;
+  position:relative;
+  overflow:hidden;
+  transform:rotateX(52deg) rotateZ(-35deg);
+  box-shadow:0 22px 34px rgba(0,0,0,.32);
+}
+.hero-biome::before,
+.hero-biome::after{
+  content:"";
+  position:absolute;
+  inset:auto 10% 12% 10%;
+  height:28px;
+  border-radius:6px;
+  background:rgba(255,255,255,.15);
+  box-shadow:
+    28px -24px 0 rgba(255,255,255,.12),
+    78px 14px 0 rgba(255,255,255,.1),
+    122px -36px 0 rgba(255,255,255,.14);
+}
+.hero-biome::after{
+  inset:14% 18% auto 18%;
+  width:34px;
+  height:52px;
+  transform:skewY(-10deg);
+  box-shadow:42px 28px 0 rgba(255,255,255,.16), 86px -4px 0 rgba(255,255,255,.12);
+}
+.hero-biome.forest{background:linear-gradient(145deg,#1d8d65,#163e72);}
+.hero-biome.mine{background:linear-gradient(145deg,#293754,#6e54bc);}
+.hero-biome.volume{background:linear-gradient(145deg,#6fc8ff,#72d985);}
+.hero-biome.temp{background:linear-gradient(145deg,#5e2859,#f17435);}
+.hero-party{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  margin-top:14px;
+}
+.hero-actions{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:12px;
+  margin-top:18px;
+}
+.hero-explorer{
+  width:54px;
+  height:72px;
+  border-radius:8px 8px 6px 6px;
+  background:linear-gradient(180deg,var(--c), color-mix(in srgb, var(--c), #000 38%));
+  position:relative;
+  box-shadow:inset 10px 0 0 rgba(255,255,255,.15), 0 12px 20px rgba(0,0,0,.28);
+  animation:idleBob 2.4s ease-in-out infinite;
+}
+.hero-explorer:nth-child(2){animation-delay:.25s}
+.hero-explorer:nth-child(3){animation-delay:.5s}
+.hero-explorer:nth-child(4){animation-delay:.75s}
+.hero-explorer::before{
+  content:"";
+  position:absolute;
+  top:-12px;
+  left:9px;
+  width:36px;
+  height:22px;
+  border-radius:6px 6px 2px 2px;
+  background:#d8f2ff;
+  box-shadow:inset 6px 0 0 rgba(255,255,255,.6), 0 4px 0 rgba(0,0,0,.15);
+}
+.hero-explorer::after{
+  content:"";
+  position:absolute;
+  top:22px;
+  left:11px;
+  width:8px;
+  height:8px;
+  background:#061120;
+  border-radius:50%;
+  box-shadow:24px 0 0 #061120;
+}
+.setup-grid{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:18px;
+}
+.field label{color:#d8f8ff;}
+.field input[type=text],
+.field select,
+#teacher-panel select,
+#teacher-panel input,
+.team-name-row select,
+.team-name-row input[type=color]{
+  border:1px solid rgba(143,233,255,.28);
+  border-radius:8px;
+  background:rgba(5,12,23,.72);
+  color:#f5fbff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+}
+.field input[type=text]::placeholder{color:#9eb6c8;}
+.chips{gap:10px;}
+.chip{
+  border:1px solid rgba(143,233,255,.22);
+  border-radius:999px;
+  background:rgba(8,18,34,.68);
+  color:#d7eaff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+  transition:transform .16s ease, background .16s ease, box-shadow .16s ease;
+}
+.chip:hover{transform:translateY(-1px); background:rgba(17,43,72,.9);}
+.chip.on{
+  background:linear-gradient(180deg, rgba(86,255,224,.94), rgba(47,184,151,.86));
+  color:#03111a;
+  text-shadow:none;
+  box-shadow:0 0 22px rgba(86,255,224,.22);
+}
+.team-name-row{
+  display:grid;
+  grid-template-columns:30px 1fr 104px 92px 86px;
+  align-items:center;
+}
+.team-dot{
+  border:1px solid rgba(255,255,255,.5);
+  border-radius:8px;
+  box-shadow:0 0 18px color-mix(in srgb, currentColor, transparent 30%);
+}
+.team-preview{
+  grid-column:2 / -1;
+  min-height:76px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:10px;
+  padding:12px;
+  border-radius:8px;
+  background:rgba(3,11,22,.38);
+  border:1px solid rgba(143,233,255,.18);
+}
+.mini-avatar{
+  width:50px;
+  height:62px;
+  flex:none;
+  border-radius:8px;
+  background:linear-gradient(180deg,var(--team-color,#56ffe0), color-mix(in srgb,var(--team-color,#56ffe0),#000 42%));
+  position:relative;
+  box-shadow:inset 9px 0 0 rgba(255,255,255,.16), 0 10px 18px rgba(0,0,0,.25);
+}
+.mini-avatar::before{
+  content:attr(data-avatar);
+  position:absolute;
+  inset:-18px 0 auto;
+  text-align:center;
+  font-size:1.5rem;
+}
+.mini-avatar::after{
+  content:attr(data-badge);
+  position:absolute;
+  right:-8px;
+  bottom:4px;
+  width:28px;
+  height:28px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  background:#f7fbff;
+  box-shadow:0 6px 14px rgba(0,0,0,.24);
+}
+#screen-game{
+  padding:12px;
+  min-height:100vh;
+}
+.hud{
+  align-items:stretch;
+  gap:10px;
+  margin-bottom:12px;
+}
+.hud-clock{
+  min-width:178px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:8px;
+  background:
+    linear-gradient(145deg, rgba(4,14,27,.92), rgba(18,37,65,.82)),
+    radial-gradient(circle at 50% 0, rgba(255,224,135,.25), transparent 56%);
+  color:#ffe087;
+  box-shadow:0 16px 34px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.14);
+}
+.hud-clock .time{font-family:"Cascadia Mono","Consolas",monospace; font-size:2rem;}
+.hud-clock .lbl{color:#b9cad8;}
+.hud-teams{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+}
+.team-card{
+  min-width:0;
+  border-left:4px solid var(--team-color,#56ffe0);
+  overflow:hidden;
+}
+.team-card::after{
+  content:"";
+  position:absolute;
+  inset:auto 12px -18px auto;
+  width:70px;
+  height:70px;
+  background:radial-gradient(circle, color-mix(in srgb,var(--team-color,#56ffe0),transparent 22%), transparent 68%);
+  opacity:.55;
+}
+.team-card.turn{
+  outline:2px solid color-mix(in srgb,var(--team-color,#56ffe0),#fff 28%);
+  animation:hudPulse 1.5s ease-in-out infinite;
+}
+.team-card .tname{
+  font-size:1rem;
+  color:#fff;
+  white-space:normal;
+  overflow:visible;
+  line-height:1.15;
+}
+.team-card .tstats span{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:999px;
+  padding:3px 8px;
+}
+.team-card .mats{color:#c7dce8;}
+.hud-avatar{
+  width:32px;
+  height:38px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(180deg,var(--team-color), color-mix(in srgb,var(--team-color),#000 40%));
+  box-shadow:inset 5px 0 0 rgba(255,255,255,.14);
+}
+.board-wrap{
+  perspective:1200px;
+}
+#board{
+  min-height:calc(100vh - 178px);
+  max-height:760px;
+  gap:10px;
+  padding:18px;
+  border:1px solid rgba(143,233,255,.22);
+  border-radius:8px;
+  background:
+    linear-gradient(145deg, rgba(6,16,31,.86), rgba(9,31,44,.74)),
+    linear-gradient(35deg, rgba(98,226,156,.14), transparent 38%, rgba(255,138,61,.12));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 28px 70px rgba(0,0,0,.34);
+  overflow:hidden;
+}
+#board::before{
+  content:"";
+  position:absolute;
+  inset:18px;
+  border-radius:8px;
+  background:
+    linear-gradient(115deg, rgba(86,255,224,.12), transparent 36%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 78px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 78px);
+  pointer-events:none;
+}
+.tile{
+  min-height:68px;
+  border:0;
+  border-radius:8px;
+  transform:translateY(0);
+  color:#fff;
+  background:var(--tile-bg,#324b5f);
+  box-shadow:
+    inset 10px 10px 0 rgba(255,255,255,.15),
+    inset -12px -14px 0 rgba(0,0,0,.22),
+    0 10px 0 var(--tile-side,rgba(0,0,0,.35)),
+    0 18px 24px rgba(0,0,0,.3);
+  text-shadow:0 2px 0 rgba(0,0,0,.35);
+  transition:transform .24s ease, filter .24s ease, box-shadow .24s ease;
+}
+.tile:hover,
+.tile.active-tile{
+  transform:translateY(-6px);
+  filter:saturate(1.15) brightness(1.08);
+}
+.tile.active-tile{
+  outline:2px solid rgba(255,255,255,.92);
+  box-shadow:
+    inset 10px 10px 0 rgba(255,255,255,.18),
+    inset -12px -14px 0 rgba(0,0,0,.18),
+    0 10px 0 var(--tile-side,rgba(0,0,0,.35)),
+    0 0 32px color-mix(in srgb,var(--tile-bg,#56ffe0),#fff 20%),
+    0 20px 30px rgba(0,0,0,.35);
+}
+.tile::after{
+  content:"";
+  position:absolute;
+  inset:8px;
+  border-radius:6px;
+  border:1px solid rgba(255,255,255,.18);
+  pointer-events:none;
+}
+.tile .tnum{
+  color:rgba(255,255,255,.7);
+  text-shadow:none;
+  font-size:.68rem;
+}
+.tile-icon{
+  position:relative;
+  z-index:2;
+  font-size:clamp(1.4rem,2.4vw,2.1rem);
+  filter:drop-shadow(0 4px 4px rgba(0,0,0,.28));
+}
+.tile-label{
+  position:absolute;
+  left:6px;
+  right:6px;
+  bottom:5px;
+  font-size:.62rem;
+  text-transform:uppercase;
+  letter-spacing:0;
+  color:rgba(255,255,255,.74);
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.tile-start{--tile-bg:#f6b93f;--tile-side:#9a6720;}
+.tile-car{--tile-bg:#26b77e;--tile-side:#146545;}
+.tile-boy{--tile-bg:#46577d;--tile-side:#24314c;}
+.tile-cha{--tile-bg:#35a6e8;--tile-side:#14608f;}
+.tile-gay{--tile-bg:#e56e46;--tile-side:#8d3a28;}
+.tile-des{--tile-bg:#8a62d8;--tile-side:#4b367b;}
+.tile-lab{--tile-bg:#42d8c5;--tile-side:#1a8178;}
+.tile-chest{--tile-bg:#f4cd42;--tile-side:#9c7717;color:#261800;}
+.tile-crea{--tile-bg:#707a93;--tile-side:#3b4355;}
+.tile-build{--tile-bg:#c49b67;--tile-side:#704c2f;}
+.tile-event{--tile-bg:#fff178;--tile-side:#a99a22;color:#201600;}
+.board-center{
+  gap:12px;
+  border:1px solid rgba(143,233,255,.22);
+  border-radius:8px;
+  background:
+    linear-gradient(145deg, rgba(7,16,31,.82), rgba(16,37,58,.78)),
+    radial-gradient(circle at 50% 0, rgba(86,255,224,.18), transparent 52%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 18px 40px rgba(0,0,0,.3);
+}
+.board-center .biome-icons{
+  width:100%;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  font-size:1.55rem;
+  letter-spacing:0;
+}
+.biome-chip{
+  min-height:58px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(145deg,var(--bio-a),var(--bio-b));
+  box-shadow:inset 7px 7px 0 rgba(255,255,255,.14), inset -8px -10px 0 rgba(0,0,0,.18);
+  position:relative;
+  overflow:hidden;
+}
+.biome-chip::after{
+  content:attr(data-name);
+  position:absolute;
+  left:5px;
+  right:5px;
+  bottom:5px;
+  font-size:.5rem;
+  color:rgba(255,255,255,.75);
+  text-transform:uppercase;
+}
+.board-center .turn-banner{
+  max-width:100%;
+  border:1px solid rgba(143,233,255,.2);
+  border-radius:8px;
+  background:rgba(4,13,26,.64);
+  color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
+}
+#tile-info{
+  border:1px solid rgba(143,233,255,.2) !important;
+  border-radius:8px;
+  background:rgba(4,13,26,.58) !important;
+  color:#dcefff;
+}
+#dice{
+  border:1px solid rgba(255,255,255,.22);
+  border-bottom:5px solid rgba(0,0,0,.45);
+  border-radius:8px;
+  background:
+    linear-gradient(145deg,#f7fbff,#b9d6ee);
+  color:#07111f;
+  box-shadow:0 12px 26px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.75);
+}
+.token{
+  width:34px;
+  height:44px;
+  border:1px solid rgba(255,255,255,.36);
+  border-radius:8px;
+  z-index:8;
+  transition:left .5s cubic-bezier(.2,.8,.2,1), top .5s cubic-bezier(.2,.8,.2,1), transform .25s ease;
+  background:linear-gradient(180deg,var(--team-color,#56ffe0), color-mix(in srgb,var(--team-color,#56ffe0),#000 40%)) !important;
+  box-shadow:inset 8px 0 0 rgba(255,255,255,.15), 0 12px 18px rgba(0,0,0,.3);
+  display:grid;
+  place-items:center;
+  font-size:1rem;
+}
+.token.walking{animation:walkBounce .48s ease-in-out infinite;}
+.token.celebrate{animation:celebrate .75s ease both;}
+.token.oops{animation:oops .55s ease both;}
+.token::before{
+  content:"";
+  top:8px;
+  left:8px;
+  width:5px;
+  height:6px;
+  border-radius:2px;
+  background:#061120;
+  box-shadow:14px 0 0 #061120;
+}
+.token::after{
+  content:attr(data-avatar);
+  position:absolute;
+  top:-18px;
+  left:0;
+  right:0;
+  text-align:center;
+  font-size:1.25rem;
+  filter:drop-shadow(0 3px 4px rgba(0,0,0,.3));
+}
+.legend{
+  border:1px solid rgba(143,233,255,.18);
+  border-radius:8px;
+  background:rgba(5,14,26,.72);
+  color:#d9ecff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
+}
+.overlay{
+  background:
+    radial-gradient(circle at 50% 26%, rgba(86,255,224,.18), transparent 35%),
+    rgba(3,8,17,.82);
+  backdrop-filter:blur(9px);
+}
+.qmodal{
+  width:min(1040px,100%);
+  border-color:rgba(143,233,255,.3);
+  animation:modalRise .24s ease both;
+}
+.qhead{
+  border-bottom:1px solid rgba(143,233,255,.22);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--topic-color,#43e8c6), #061120 28%), rgba(9,18,34,.82)) !important;
+  text-shadow:none;
+}
+.qhead .qtag{font-family:"Segoe UI Black","Arial Black"; letter-spacing:0;}
+.qtimer{
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:999px;
+  background:rgba(3,8,17,.72);
+  box-shadow:0 0 18px rgba(255,201,58,.18);
+}
+.qbody{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:10px;
+}
+.qtext{
+  color:#fff;
+  font-size:clamp(1.35rem,2.3vw,1.85rem);
+  line-height:1.32;
+}
+.qpts{color:#ffe087;}
+.opts{gap:14px;}
+.opt{
+  border:1px solid rgba(143,233,255,.24);
+  border-bottom:4px solid rgba(0,0,0,.42);
+  border-radius:8px;
+  color:#eef7ff;
+  background:linear-gradient(145deg, rgba(18,43,72,.92), rgba(8,18,34,.88));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 10px 22px rgba(0,0,0,.22);
+  transition:transform .16s ease, background .16s ease, border-color .16s ease;
+}
+.opt:nth-child(1){--letter:#56ffe0}
+.opt:nth-child(2){--letter:#ffe087}
+.opt:nth-child(3){--letter:#8c62ff}
+.opt:nth-child(4){--letter:#ff8a3d}
+.opt:hover{
+  background:linear-gradient(145deg, rgba(28,69,104,.95), rgba(10,28,48,.95));
+  transform:translateY(-2px);
+}
+.opt .letter{
+  border:0;
+  border-radius:8px;
+  background:var(--letter,#56ffe0);
+  color:#061120;
+  line-height:30px;
+  box-shadow:0 6px 12px rgba(0,0,0,.24);
+}
+.opt.sel-ok{
+  background:linear-gradient(145deg, rgba(57,210,128,.92), rgba(12,72,55,.9));
+  border-color:#70ffc4;
+}
+.opt.sel-bad{
+  background:linear-gradient(145deg, rgba(229,83,61,.92), rgba(86,20,28,.9));
+  border-color:#ff9a92;
+}
+.num-answer input,
+.order-item,
+.judge-box,
+.hint-box,
+.feedback{
+  border:1px solid rgba(143,233,255,.22);
+  border-radius:8px;
+}
+.num-answer input{
+  background:rgba(3,8,17,.7);
+  color:#fff;
+}
+.order-item{
+  color:#eef7ff;
+  background:linear-gradient(145deg, rgba(18,43,72,.92), rgba(8,18,34,.86));
+}
+.order-item .onum{
+  border:0;
+  border-radius:8px;
+  background:linear-gradient(180deg,#d8e7f5,#71859a);
+  color:#07111f;
+}
+.judge-box,
+.hint-box{
+  background:rgba(255,224,135,.12);
+  color:#fff1c2;
+}
+.feedback{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 14px 28px rgba(0,0,0,.22);
+}
+.feedback.ok{
+  background:linear-gradient(145deg, rgba(41,147,92,.9), rgba(9,44,36,.9));
+  border-color:#70ffc4;
+}
+.feedback.bad{
+  background:linear-gradient(145deg, rgba(163,59,68,.92), rgba(52,20,32,.9));
+  border-color:#ff9a92;
+}
+.qfoot{
+  border-top:1px solid rgba(143,233,255,.22);
+  background:rgba(5,12,23,.68);
+}
+.pboxes{
+  align-items:end;
+}
+.pbox{
+  border:1px solid rgba(143,233,255,.26);
+  border-radius:8px;
+  background:
+    linear-gradient(145deg, rgba(160,232,255,.22), rgba(7,18,32,.9)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.045) 0 1px, transparent 1px 32px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 10px 24px rgba(0,0,0,.22);
+}
+.pdot{
+  border:0;
+  background:#56ffe0;
+  box-shadow:0 0 10px rgba(86,255,224,.9);
+}
+.pdot.hot{
+  background:#ff9b4e;
+  box-shadow:0 0 12px rgba(255,138,61,.95);
+}
+.gas-visual{
+  margin-top:16px;
+  display:grid;
+  grid-template-columns:170px 1fr;
+  gap:14px;
+  align-items:center;
+  padding:14px;
+  border:1px solid rgba(143,233,255,.2);
+  border-radius:8px;
+  background:rgba(3,10,21,.38);
+}
+.gas-chamber{
+  width:150px;
+  height:120px;
+  border:1px solid rgba(143,233,255,.35);
+  border-radius:8px;
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(145deg, rgba(215,248,255,.12), rgba(21,42,65,.86));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), inset 0 -18px 36px rgba(0,0,0,.18);
+}
+.gas-chamber::before{
+  content:"";
+  position:absolute;
+  inset:14px;
+  border:1px dashed rgba(255,255,255,.2);
+  border-radius:6px;
+}
+.gas-dot{
+  position:absolute;
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:var(--gas,#56ffe0);
+  box-shadow:0 0 12px var(--gas,#56ffe0);
+  animation:moleculeMove 2s ease-in-out infinite alternate;
+}
+.gas-dot:nth-child(1){left:18%;top:28%}
+.gas-dot:nth-child(2){left:42%;top:20%;animation-delay:.3s}
+.gas-dot:nth-child(3){left:68%;top:36%;animation-delay:.6s}
+.gas-dot:nth-child(4){left:26%;top:66%;animation-delay:.9s}
+.gas-dot:nth-child(5){left:58%;top:72%;animation-delay:1.2s}
+.gas-dot:nth-child(6){left:78%;top:64%;animation-delay:1.5s}
+.gas-law-boy .gas-chamber{animation:compressBox 2.4s ease-in-out infinite;--gas:#56ffe0}
+.gas-law-cha .gas-chamber{animation:expandBox 2.6s ease-in-out infinite;--gas:#ffe087}
+.gas-law-gay .gas-chamber{--gas:#ff8a3d}
+.gas-law-gay .gas-dot{animation:moleculeMove .7s ease-in-out infinite alternate}
+.gas-law-gay .gas-chamber::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border:2px solid rgba(255,138,61,.45);
+  border-radius:8px;
+  animation:pressurePulse 1.1s ease-in-out infinite;
+}
+.gas-note{
+  color:#dcefff;
+  line-height:1.45;
+}
+.gas-note strong{color:#fff;}
+.center-modal{
+  border-color:rgba(143,233,255,.28);
+  animation:modalRise .24s ease both;
+}
+.big-emoji{
+  filter:drop-shadow(0 12px 18px rgba(0,0,0,.28));
+  animation:idleBob 2.2s ease-in-out infinite;
+}
+.build-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));}
+.build-item{
+  border:1px solid rgba(143,233,255,.2);
+  border-radius:8px;
+  color:#eef7ff;
+  background:linear-gradient(145deg, rgba(18,43,72,.86), rgba(8,18,34,.82));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
+  position:relative;
+  overflow:hidden;
+}
+.build-item::before{
+  content:"";
+  position:absolute;
+  inset:auto 10px 10px auto;
+  width:38px;
+  height:38px;
+  background:rgba(86,255,224,.12);
+  transform:rotate(45deg);
+}
+.built-tag{display:inline-flex; margin-top:8px;}
+.lab-preview{
+  margin:14px 0;
+  min-height:150px;
+  border:1px solid rgba(143,233,255,.2);
+  border-radius:8px;
+  background:
+    linear-gradient(145deg, rgba(8,18,34,.86), rgba(15,45,55,.64)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.04) 0 1px, transparent 1px 42px);
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  align-items:end;
+  justify-content:center;
+  gap:8px;
+  padding:18px;
+}
+.lab-preview::before{
+  content:"";
+  position:absolute;
+  left:8%;
+  right:8%;
+  bottom:14px;
+  height:24px;
+  border-radius:6px;
+  background:linear-gradient(145deg,#3b5164,#182638);
+  box-shadow:0 12px 18px rgba(0,0,0,.28);
+}
+.lab-piece{
+  position:relative;
+  z-index:2;
+  width:46px;
+  height:54px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:linear-gradient(145deg, rgba(86,255,224,.8), rgba(45,91,128,.9));
+  box-shadow:inset 8px 8px 0 rgba(255,255,255,.15), inset -8px -9px 0 rgba(0,0,0,.18), 0 12px 18px rgba(0,0,0,.28);
+  animation:blockBuild .38s ease both;
+}
+.lab-piece:nth-child(2n){background:linear-gradient(145deg, rgba(255,224,135,.82), rgba(151,103,42,.92));}
+.lab-piece:nth-child(3n){background:linear-gradient(145deg, rgba(140,98,255,.82), rgba(54,47,107,.92));}
+#screen-boss{
+  max-width:1120px;
+  padding-top:24px;
+}
+.boss-card{
+  position:relative;
+  overflow:hidden;
+  min-height:680px;
+  background:
+    linear-gradient(145deg, rgba(8,16,32,.96), rgba(36,24,58,.9)),
+    radial-gradient(circle at 50% 20%, rgba(255,138,61,.24), transparent 38%);
+}
+.boss-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 86px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 72px);
+  pointer-events:none;
+}
+.boss-title{color:#ffd08d;}
+.boss-creature{
+  width:220px;
+  height:190px;
+  margin:16px auto;
+  position:relative;
+  filter:drop-shadow(0 22px 28px rgba(0,0,0,.34));
+  animation:bossHover 2.8s ease-in-out infinite;
+}
+.boss-core,
+.boss-wing,
+.boss-tube,
+.boss-crystal{
+  position:absolute;
+  border-radius:8px;
+  box-shadow:inset 10px 10px 0 rgba(255,255,255,.16), inset -12px -14px 0 rgba(0,0,0,.22);
+}
+.boss-core{
+  left:62px;
+  top:46px;
+  width:96px;
+  height:96px;
+  background:linear-gradient(145deg,#8c62ff,#26366e);
+}
+.boss-core::before{
+  content:"";
+  position:absolute;
+  left:27px;
+  top:27px;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:#56ffe0;
+  box-shadow:0 0 28px #56ffe0;
+}
+.boss-wing{
+  width:74px;
+  height:58px;
+  background:linear-gradient(145deg,#ff8a3d,#7c2842);
+}
+.boss-wing.left{left:10px;top:72px;transform:skewY(18deg);}
+.boss-wing.right{right:10px;top:72px;transform:skewY(-18deg);}
+.boss-tube{
+  left:96px;
+  top:8px;
+  width:30px;
+  height:176px;
+  background:linear-gradient(180deg,rgba(215,248,255,.7),rgba(86,255,224,.22));
+  border:1px solid rgba(215,248,255,.35);
+}
+.boss-crystal{
+  left:85px;
+  top:0;
+  width:54px;
+  height:54px;
+  transform:rotate(45deg);
+  background:linear-gradient(145deg,#ffe087,#56ffe0);
+  box-shadow:0 0 30px rgba(86,255,224,.42);
+}
+.hpbar-wrap{
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;
+  background:rgba(3,8,17,.7);
+  overflow:hidden;
+}
+.hpbar{
+  border-radius:999px;
+  background:linear-gradient(90deg,#ff445d,#ff8a3d,#ffe087);
+  text-shadow:none;
+  color:#120a02;
+}
+.boss-team-btn{
+  border:1px solid rgba(143,233,255,.24);
+  border-bottom:4px solid rgba(0,0,0,.42);
+  border-radius:8px;
+  background:linear-gradient(145deg, rgba(18,43,72,.92), rgba(8,18,34,.86));
+  color:#eef7ff;
+}
+.boss-team-btn.hit{
+  background:linear-gradient(145deg, rgba(86,255,224,.92), rgba(23,135,108,.9));
+  color:#03111a;
+}
+#screen-report{
+  max-width:1120px;
+}
+#screen-report > .card{
+  position:relative;
+  overflow:hidden;
+}
+.podium{
+  align-items:end;
+  justify-content:center;
+}
+.podium .team-card{
+  min-height:150px;
+  flex:1 1 220px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.podium .team-card:nth-child(1){
+  min-height:190px;
+  transform:translateY(-8px);
+  box-shadow:0 0 36px rgba(255,224,135,.24), 0 22px 45px rgba(0,0,0,.34);
+}
+.rt-bar-bg{
+  border:1px solid rgba(143,233,255,.18);
+  border-radius:999px;
+  background:rgba(3,8,17,.58);
+  overflow:hidden;
+}
+.rt-bar{
+  border-radius:999px;
+  text-shadow:none;
+}
+.reinforce{
+  border:1px solid rgba(255,224,135,.34);
+  border-radius:8px;
+  color:#fff4cc;
+  background:rgba(255,201,58,.12);
+}
+table.rtable{
+  border-collapse:separate;
+  border-spacing:0;
+  color:#eef7ff;
+  background:rgba(3,8,17,.45);
+  border:1px solid rgba(143,233,255,.18);
+  border-radius:8px;
+  overflow:hidden;
+}
+table.rtable th,
+table.rtable td{
+  border:0;
+  border-bottom:1px solid rgba(143,233,255,.14);
+  font-size:1rem;
+}
+table.rtable th{
+  background:rgba(86,255,224,.16);
+  color:#cffff8;
+  text-shadow:none;
+}
+#teacher-fab{
+  border:1px solid rgba(255,224,135,.45);
+  border-radius:50%;
+  background:linear-gradient(145deg,#17253b,#08111f);
+  box-shadow:0 18px 34px rgba(0,0,0,.34), 0 0 22px rgba(255,224,135,.22);
+}
+#teacher-panel{
+  background:
+    linear-gradient(145deg, rgba(8,18,34,.98), rgba(18,37,65,.96)),
+    radial-gradient(circle at 50% 0, rgba(86,255,224,.16), transparent 48%);
+  border-left:1px solid rgba(143,233,255,.25);
+  box-shadow:-18px 0 44px rgba(0,0,0,.34);
+}
+#teacher-panel h3{color:#cffff8;}
+#teacher-panel .tp-group{
+  border-bottom:1px solid rgba(143,233,255,.15);
+  padding:12px;
+  border-radius:8px;
+  background:rgba(255,255,255,.035);
+}
+.fx-controls{
+  display:grid;
+  gap:8px;
+  color:#dcefff;
+  font-size:.9rem;
+}
+.fx-controls label{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+}
+.fx-controls input[type=range]{width:130px;}
+#toast{
+  border:1px solid rgba(255,224,135,.42);
+  border-radius:8px;
+  background:linear-gradient(145deg, rgba(20,34,54,.96), rgba(8,18,34,.96));
+  box-shadow:0 18px 34px rgba(0,0,0,.34);
+}
+body.fx-off .title-wrap::after,
+body.fx-off .pdot,
+body.fx-off .gas-dot,
+body.fx-off .ambient-particle,
+body.fx-off .boss-creature,
+body.fx-off .big-emoji{animation:none !important;}
+body.motion-reduced *,
+body.motion-reduced *::before,
+body.motion-reduced *::after{
+  animation:none !important;
+  transition:none !important;
+}
+@keyframes particleDrift{from{background-position:0 0}to{background-position:180px 120px}}
+@keyframes idleBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes hudPulse{0%,100%{box-shadow:0 0 0 rgba(86,255,224,0), 0 18px 45px rgba(0,0,0,.34)}50%{box-shadow:0 0 24px color-mix(in srgb,var(--team-color,#56ffe0),transparent 35%), 0 18px 45px rgba(0,0,0,.34)}}
+@keyframes modalRise{from{opacity:0; transform:translateY(16px) scale(.98)}to{opacity:1; transform:translateY(0) scale(1)}}
+@keyframes moleculeMove{from{transform:translate(-5px,4px)}to{transform:translate(7px,-7px)}}
+@keyframes compressBox{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.68)}}
+@keyframes expandBox{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes pressurePulse{0%,100%{box-shadow:0 0 0 rgba(255,138,61,0)}50%{box-shadow:0 0 28px rgba(255,138,61,.55)}}
+@keyframes blockBuild{from{opacity:0; transform:translateY(28px) scale(.8)}to{opacity:1; transform:translateY(0) scale(1)}}
+@keyframes bossHover{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-12px) rotate(1deg)}}
+@keyframes walkBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@keyframes celebrate{0%{transform:translateY(0) scale(1)}45%{transform:translateY(-16px) scale(1.12)}100%{transform:translateY(0) scale(1)}}
+@keyframes oops{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@media(max-width:900px){
+  .hero-world{grid-template-columns:repeat(2,1fr);}
+  .team-name-row{grid-template-columns:30px 1fr; gap:8px;}
+  .team-name-row select,.team-name-row input[type=color]{grid-column:2;}
+  .gas-visual{grid-template-columns:1fr;}
+  .hud-teams{grid-template-columns:1fr;}
+  #board{min-height:620px;}
+}
+/* accesibilidad / impresión */
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important;}
+}
+@media print{
+  body{background:#fff;}
+  .screen{display:none;}
+  #screen-report{display:block !important;}
+  .no-print, #teacher-fab, #teacher-panel, #toast{display:none !important;}
+  .card{box-shadow:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= PANTALLA 1: PORTADA Y CONFIGURACIÓN ================= -->
+<section id="screen-setup" class="screen active">
+  <div class="title-wrap">
+    <div class="title-blocks">
+      <div class="tblock" style="background:var(--grass)"></div>
+      <div class="tblock" style="background:var(--dirt)"></div>
+      <div class="tblock" style="background:var(--stone)"></div>
+      <div class="tblock" style="background:var(--crystal)"></div>
+      <div class="tblock" style="background:var(--lava)"></div>
+    </div>
+    <h1 class="pixel-title">Misión: El Reino de los Gases</h1>
+    <p class="sub">Aventura de repaso · Ciencias Naturales · Grado octavo</p>
+    <div class="hero-world" aria-hidden="true">
+      <div class="hero-biome forest"></div>
+      <div class="hero-biome mine"></div>
+      <div class="hero-biome volume"></div>
+      <div class="hero-biome temp"></div>
+    </div>
+    <div class="hero-party" aria-hidden="true">
+      <div class="hero-explorer" style="--c:#E5533D"></div>
+      <div class="hero-explorer" style="--c:#3E7BFA"></div>
+      <div class="hero-explorer" style="--c:#39A845"></div>
+      <div class="hero-explorer" style="--c:#EFAF1F"></div>
+    </div>
+    <div class="hero-actions no-print">
+      <button class="btn gold" id="btn-hero-start" type="button">Iniciar expedición</button>
+      <button class="btn stone" id="btn-hero-teams" type="button">Configurar equipos</button>
+      <button class="btn wood" id="btn-hero-panel" type="button">Panel docente</button>
+    </div>
+  </div>
+
+  <div class="card story-box" style="margin-bottom:16px;">
+    <h3>📜 La historia</h3>
+    <p>El <strong>Reino de los Gases</strong> ha perdido su energía: sus cuatro biomas científicos
+    —el <strong>Bosque de las Partículas 🌲</strong>, la <strong>Mina de la Presión ⛏️</strong>,
+    el <strong>Valle del Volumen 🏞️</strong> y el <strong>Volcán de la Temperatura 🌋</strong>—
+    fueron afectados por el misterioso <strong>Guardián de la Presión</strong>.
+    Cada equipo es una expedición científica: exploren el mapa, respondan retos, resuelvan problemas
+    y reúnan <strong>cristales de energía 💎</strong> y materiales para construir el mejor laboratorio.
+    ¡Al final, todos enfrentarán al Guardián!</p>
+  </div>
+
+  <div class="setup-grid">
+    <div class="card">
+      <h3>⚙️ Configuración de la partida</h3>
+      <div class="field">
+        <label for="cfg-nteams">Número de equipos</label>
+        <select id="cfg-nteams">
+          <option value="3">3 equipos</option>
+          <option value="4" selected>4 equipos</option>
+          <option value="5">5 equipos</option>
+          <option value="6">6 equipos</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Nombres de los equipos</label>
+        <div id="team-names"></div>
+      </div>
+      <div class="field">
+        <label>Duración de la partida</label>
+        <div class="chips" id="cfg-duration">
+          <span class="chip" data-v="20" tabindex="0">20 min</span>
+          <span class="chip on" data-v="30" tabindex="0">30 min</span>
+          <span class="chip" data-v="40" tabindex="0">40 min</span>
+          <span class="chip" data-v="50" tabindex="0">50 min</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Nivel de dificultad</label>
+        <div class="chips" id="cfg-dif">
+          <span class="chip" data-v="1" tabindex="0">Básico</span>
+          <span class="chip on" data-v="2" tabindex="0">Intermedio</span>
+          <span class="chip" data-v="3" tabindex="0">Avanzado</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🧪 Temas y opciones</h3>
+      <div class="field">
+        <label>Temas incluidos (toca para activar o quitar)</label>
+        <div class="chips" id="cfg-topics">
+          <span class="chip on" data-v="car" tabindex="0">Características de los gases</span>
+          <span class="chip on" data-v="boy" tabindex="0">Ley de Boyle</span>
+          <span class="chip on" data-v="cha" tabindex="0">Ley de Charles</span>
+          <span class="chip on" data-v="gay" tabindex="0">Ley de Gay-Lussac</span>
+          <span class="chip on" data-v="des" tabindex="0">Despeje de variables</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Tiempo límite por pregunta</label>
+        <div class="chips" id="cfg-qtimer">
+          <span class="chip on" data-v="on" tabindex="0">Con tiempo (60–90 s)</span>
+          <span class="chip" data-v="off" tabindex="0">Sin límite</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Sonidos</label>
+        <div class="chips" id="cfg-sound">
+          <span class="chip on" data-v="on" tabindex="0">Activados 🔊</span>
+          <span class="chip" data-v="off" tabindex="0">Desactivados 🔇</span>
+        </div>
+      </div>
+      <div class="field">
+        <p style="font-size:.88rem; line-height:1.4;">💡 <strong>Sugerencia:</strong> proyecta esta pantalla,
+        forma los equipos y deja que cada grupo elija su nombre de expedición antes de comenzar.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="setup-actions">
+    <button class="btn" id="btn-start" style="font-size:1.3rem; padding:16px 34px;">⛏️ ¡Comenzar la expedición!</button>
+    <div id="resume-box" style="margin-top:12px; display:none;">
+      <button class="btn wood small" id="btn-resume">↩️ Continuar la partida guardada</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PANTALLA 2: TABLERO ================= -->
+<section id="screen-game" class="screen">
+  <div class="hud">
+    <div class="hud-clock">
+      <span class="time" id="hud-time">30:00</span>
+      <span class="lbl">Tiempo restante</span>
+    </div>
+    <div class="hud-teams" id="hud-teams"></div>
+    <div class="hud-btns no-print">
+      <button class="btn small gold" id="btn-boss-now">🛡️ Jefe final</button>
+      <button class="btn small stone" id="btn-pause">⏸️ Pausar</button>
+    </div>
+  </div>
+
+  <div class="board-wrap">
+    <div id="board" aria-label="Mapa del Reino de los Gases"></div>
+  </div>
+
+  <div class="legend">
+    <span>❓ Conocimiento</span><span>⛏️ Mina de Boyle</span><span>🌀 Portal de Charles</span>
+    <span>🗼 Torre de Gay-Lussac</span><span>🧮 Mesa de despeje</span><span>🔬 Laboratorio</span>
+    <span>🎁 Cofre científico</span><span>👾 Criatura del error</span><span>🏗️ Construcción</span><span>⚡ Evento</span>
+  </div>
+</section>
+
+<!-- ================= PANTALLA 3: JEFE FINAL ================= -->
+<section id="screen-boss" class="screen">
+  <div class="boss-card">
+    <h2 class="boss-title pixel-title">🛡️ Jefe final: El Guardián de la Presión</h2>
+    <div class="boss-creature" aria-label="Guardián de la Presión">
+      <div class="boss-wing left"></div>
+      <div class="boss-wing right"></div>
+      <div class="boss-tube"></div>
+      <div class="boss-core"></div>
+      <div class="boss-crystal"></div>
+    </div>
+    <p style="text-align:center;">Cinco preguntas integradoras. <strong>Todos los equipos</strong> discuten y escriben su respuesta.
+    La docente marca qué equipos acertaron: cada acierto le quita energía al Guardián y da <strong>+25 puntos</strong>.</p>
+    <div class="hpbar-wrap"><div class="hpbar" id="boss-hp" style="width:100%">Energía del Guardián: 100%</div></div>
+    <div class="boss-q" id="boss-q-box">
+      <p style="font-weight:bold;" id="boss-q-count"></p>
+      <p class="qtext" id="boss-q-text"></p>
+      <div id="boss-q-answer" style="display:none; margin-top:12px; padding:10px; background:#E4F8E8; border:4px solid var(--ok);"></div>
+      <div style="margin-top:12px;" class="no-print">
+        <button class="btn small wood" id="boss-show-answer">👁️ Mostrar respuesta</button>
+      </div>
+      <p style="margin-top:14px; font-weight:bold;">Marca los equipos que respondieron correctamente:</p>
+      <div class="boss-teams" id="boss-teams"></div>
+      <div style="margin-top:14px; text-align:right;">
+        <button class="btn" id="boss-next">Siguiente pregunta ➡️</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PANTALLA 4: INFORME FINAL ================= -->
+<section id="screen-report" class="screen">
+  <div class="card">
+    <h2 style="text-align:center;">🏆 Informe final de la expedición</h2>
+    <div id="report-podium" class="podium"></div>
+    <h3 style="margin-top:14px;">📊 Desempeño del grupo por tema</h3>
+    <div id="report-topics"></div>
+    <div class="reinforce" id="report-reinforce"></div>
+    <h3 style="margin-top:18px;">📋 Detalle por equipo</h3>
+    <div style="overflow-x:auto;"><table class="rtable" id="report-table"></table></div>
+    <div style="text-align:center; margin-top:20px;" class="no-print">
+      <button class="btn gold" onclick="window.print()">🖨️ Descargar o imprimir resultados</button>
+      <button class="btn wood" id="btn-restart-report">🔁 Nueva partida</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MODAL DE PREGUNTA ================= -->
+<div class="overlay" id="q-overlay">
+  <div class="qmodal">
+    <div class="qhead" id="q-head">
+      <span class="qtag" id="q-tag">Pregunta</span>
+      <span id="q-team" style="font-weight:bold;"></span>
+      <span class="qtimer" id="q-timer" style="display:none;">60</span>
+    </div>
+    <div class="qbody">
+      <p class="qtext" id="q-text"></p>
+      <p class="qpts" id="q-pts"></p>
+      <div id="q-extra"></div>
+      <div id="q-answers"></div>
+      <div class="hint-box" id="q-hint"></div>
+      <div class="feedback" id="q-feedback"></div>
+    </div>
+    <div class="qfoot no-print">
+      <div>
+        <button class="btn small gold" id="btn-hint">💡 Pista (−5 pts)</button>
+        <button class="btn small stone" id="btn-annul">🚫 Anular</button>
+      </div>
+      <button class="btn" id="btn-continue" style="display:none;">Continuar ➡️</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL CENTRAL (cofre, construcción, eventos, pausa) ================= -->
+<div class="overlay" id="c-overlay">
+  <div class="center-modal" id="c-modal"></div>
+</div>
+
+<!-- ================= PANEL DOCENTE ================= -->
+<button id="teacher-fab" class="no-print" title="Panel docente (tecla P)">🛠️</button>
+<aside id="teacher-panel" class="no-print">
+  <h3>🛠️ Panel docente</h3>
+  <div class="tp-group">
+    <button class="btn stone" id="tp-pause">⏸️ Pausar / Reanudar</button>
+    <button class="btn wood" id="tp-skip">⏭️ Cambiar de turno</button>
+    <button class="btn wood" id="tp-newq">🔄 Nueva pregunta para este turno</button>
+    <button class="btn gold" id="tp-tiebreak">⚖️ Pregunta de desempate</button>
+  </div>
+  <div class="tp-group">
+    <label style="font-size:.8rem;">Asignar puntos manualmente</label>
+    <select id="tp-team"></select>
+    <input type="number" id="tp-points" value="10" step="5">
+    <button class="btn" id="tp-give">➕ Asignar puntos</button>
+  </div>
+  <div class="tp-group">
+    <label style="font-size:.8rem;">Desempeño por tema (aciertos/intentos)</label>
+    <div class="tp-perf" id="tp-perf"></div>
+  </div>
+  <div class="tp-group">
+    <label style="font-size:.8rem;">Ambiente visual y sonido</label>
+    <div class="fx-controls">
+      <label><span>Reducir animaciones</span><input type="checkbox" id="tp-reduce-motion"></label>
+      <label><span>Desactivar efectos</span><input type="checkbox" id="tp-effects"></label>
+      <label><span>Silenciar</span><input type="checkbox" id="tp-mute"></label>
+      <label><span>Volumen</span><input type="range" id="tp-volume" min="0" max="1" value="0.75" step="0.05"></label>
+    </div>
+  </div>
+  <div class="tp-group">
+    <button class="btn gold" id="tp-boss">🛡️ Ir al jefe final</button>
+    <button class="btn red" id="tp-restart">🗑️ Reiniciar el juego</button>
+  </div>
+  <button class="btn stone" id="tp-close">✖️ Cerrar panel</button>
+</aside>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   DATOS DEL JUEGO
+   ============================================================ */
+"use strict";
+
+/* ---- Temas ---- */
+const TOPICS = {
+  car:{name:"Características de los gases", color:"#63B23A"},
+  boy:{name:"Ley de Boyle", color:"#8A6D3B"},
+  cha:{name:"Ley de Charles", color:"#3E7BFA"},
+  gay:{name:"Ley de Gay-Lussac", color:"#E5533D"},
+  des:{name:"Despeje de variables", color:"#9B59B6"}
+};
+
+const TEAM_COLORS = ["#E5533D","#3E7BFA","#39A845","#EFAF1F","#9B59B6","#FF8C42"];
+const TEAM_AVATARS = ["🧪","🛰️","🔬","🧭","⚗️","🛡️"];
+const TEAM_BADGES = ["P","V","T","M","K","N"];
+const MATS = {madera:{icon:"🪵",n:"madera"}, piedra:{icon:"🪨",n:"piedra"}, vidrio:{icon:"🧊",n:"vidrio"}, hierro:{icon:"⛓️",n:"hierro"}};
+
+const BUILDS = [
+  {id:"pared", n:"Paredes del laboratorio", icon:"🧱", cost:{piedra:2}},
+  {id:"mesa", n:"Mesa de trabajo", icon:"🪑", cost:{madera:2}},
+  {id:"micro", n:"Microscopio", icon:"🔬", cost:{vidrio:2, hierro:1}},
+  {id:"tanque", n:"Tanque de gas", icon:"🛢️", cost:{hierro:2}},
+  {id:"meteo", n:"Estación meteorológica", icon:"🌦️", cost:{madera:1, piedra:1, vidrio:1}},
+  {id:"pc", n:"Computador científico", icon:"💻", cost:{vidrio:2, hierro:2}}
+];
+
+/* ---- Banco de preguntas ----
+ t: tema | d: dificultad 1-3 | ty: tipo
+ tipos: mc (selección múltiple), vf (verdadero/falso + justificación),
+ num (problema numérico), order (ordenar pasos), oral (explicación oral),
+ error (corregir error conceptual), particle (interpretar dibujo de partículas)
+ lab:true → puede salir en casilla Laboratorio experimental
+ er:true → reservada para la Criatura del error conceptual
+*/
+const QUESTIONS = [
+/* ===== CARACTERÍSTICAS DE LOS GASES ===== */
+{t:"car",d:1,ty:"mc",q:"¿Cuál de las siguientes NO es una característica de los gases?",
+ o:["Ocupan espacio","Tienen masa","Tienen forma y volumen definidos","Se pueden comprimir"],a:2,
+ h:"Piensa en el aire dentro de un globo: ¿mantiene su forma si lo sacas del globo?",
+ e:"Los gases NO tienen forma ni volumen definidos: adoptan la forma del recipiente y llenan todo el espacio disponible. Sí ocupan espacio, tienen masa y pueden comprimirse."},
+{t:"car",d:1,ty:"mc",q:"Cuando inflamos un globo, este se agranda. Esto demuestra principalmente que el aire…",
+ o:["No tiene masa","Ocupa espacio","Es un líquido","Desaparece al salir"],a:1,
+ h:"El globo se estira porque algo lo llena por dentro.",
+ e:"El aire, como todo gas, ocupa espacio. Al entrar al globo, sus partículas se distribuyen y empujan las paredes elásticas, agrandándolo."},
+{t:"car",d:1,ty:"vf",q:"Verdadero o falso: “Los gases tienen forma definida, como los sólidos”.",a:false,
+ h:"¿Qué forma tiene el aire de este salón? ¿Y el del interior de una botella?",
+ e:"FALSO. Los gases no tienen forma propia: adoptan la forma del recipiente que los contiene, porque sus partículas están muy separadas y se mueven libremente."},
+{t:"car",d:1,ty:"vf",q:"Verdadero o falso: “Los gases tienen masa, aunque no los veamos”.",a:true, lab:true,
+ h:"Si pesamos un balón desinflado y luego inflado, ¿la balanza marca lo mismo?",
+ e:"VERDADERO. Un balón bien inflado pesa un poco más que uno desinflado: el aire que entró tiene masa, aunque sea invisible."},
+{t:"car",d:1,ty:"mc",q:"¿Cómo están las partículas de un gas?",
+ o:["Muy juntas y ordenadas","Juntas pero deslizándose","Muy separadas y en movimiento constante","Quietas y separadas"],a:2,
+ h:"Compara con los sólidos (muy ordenados) y los líquidos (juntos pero fluidos).",
+ e:"En los gases, las partículas están muy separadas entre sí y se mueven constantemente en todas las direcciones, chocando entre ellas y con las paredes del recipiente."},
+{t:"car",d:2,ty:"particle",q:"Observa las dos cajas. ¿Cuál representa mejor un GAS?",
+ p:[{label:"Caja A",n:9,mode:"gas"},{label:"Caja B",n:9,mode:"liquid"}],
+ o:["La caja A, porque las partículas están separadas y dispersas por todo el espacio","La caja B, porque las partículas están agrupadas en el fondo","Las dos representan gases","Ninguna representa un gas"],a:0,
+ h:"Un gas llena TODO el recipiente, no solo el fondo.",
+ e:"En un gas las partículas están muy separadas y ocupan todo el volumen disponible (caja A). En la caja B las partículas se agrupan en el fondo, como en un líquido."},
+{t:"car",d:2,ty:"mc",q:"¿Por qué es posible comprimir un gas con facilidad?",
+ o:["Porque sus partículas se hacen más pequeñas","Porque hay grandes espacios vacíos entre sus partículas","Porque sus partículas desaparecen","Porque el gas se convierte en líquido"],a:1,
+ h:"Al comprimir no cambian las partículas, cambia la distancia entre ellas.",
+ e:"Entre las partículas de un gas hay grandes espacios vacíos. Al comprimir, las partículas se acercan entre sí ocupando menos volumen; las partículas NO cambian de tamaño ni de cantidad."},
+{t:"car",d:2,ty:"mc",q:"La profesora abre un frasco de perfume al frente del salón y, poco después, los estudiantes del fondo lo huelen. Esto ocurre porque…",
+ o:["El perfume se evapora y sus partículas se mueven y se expanden por todo el salón","El aire empuja el perfume solo hacia el fondo","Las partículas del perfume son livianas y flotan quietas","El olor viaja por el piso"],a:0,
+ h:"Recuerda: las partículas de un gas se mueven constantemente en todas direcciones.",
+ e:"Las partículas del perfume pasan al estado gaseoso y, como todo gas, se mueven constantemente y se expanden hasta ocupar todo el espacio disponible: el salón entero."},
+{t:"car",d:1,ty:"vf",q:"Verdadero o falso: “Un gas se expande hasta llenar todo el recipiente que lo contiene”.",a:true,
+ h:"Piensa en un poco de gas liberado dentro de una botella grande.",
+ e:"VERDADERO. Como sus partículas se mueven libremente y están muy separadas, el gas se expande y ocupa todo el volumen disponible, sin importar la cantidad de gas."},
+{t:"car",d:1,ty:"mc",q:"Al tapar la salida de una bomba (inflador) de bicicleta y empujar el émbolo, el aire de adentro se deja apretar. ¿Qué propiedad de los gases se demuestra?",
+ o:["Expansión","Compresibilidad","Evaporación","Solidificación"],a:1,
+ h:"Estás reduciendo el espacio que ocupa el aire.",
+ e:"Se demuestra la compresibilidad: el aire puede reducir su volumen porque entre sus partículas hay mucho espacio vacío."},
+{t:"car",d:2,ty:"oral",q:"Reto de explicación oral: expliquen con sus propias palabras por qué un globo inflado se va desinflando lentamente con el paso de los días.",
+ h:"Las partículas del gas son pequeñísimas y están en movimiento constante… ¿podrán escapar?",
+ e:"Las partículas del gas están en constante movimiento y son tan pequeñas que logran escapar poco a poco por los microporos del material del globo. Por eso pierde volumen lentamente."},
+{t:"car",d:2,ty:"mc",q:"La presión que ejerce un gas sobre las paredes de un recipiente se debe a…",
+ o:["El peso del recipiente","Los choques constantes de sus partículas contra las paredes","La humedad del aire","El color del gas"],a:1,
+ h:"Imagina millones de pelotitas rebotando dentro de una caja.",
+ e:"Las partículas del gas se mueven sin parar y chocan millones de veces contra las paredes. La suma de todos esos choques es lo que llamamos presión del gas."},
+{t:"car",d:2,ty:"error",er:true,q:"La Criatura del error afirma: “El aire no pesa, porque no lo podemos ver ni sentir en la mano”. Corrijan la afirmación y justifiquen.",
+ h:"¿Ver algo es requisito para que tenga masa? Piensen en cómo comprobarlo con una balanza.",
+ e:"Corrección: el aire SÍ tiene masa (y por eso pesa), aunque sea invisible. Se puede comprobar pesando un balón desinflado y luego inflado: el inflado pesa más porque contiene más aire."},
+{t:"car",d:2,ty:"mc",lab:true,q:"Experimento: se pega un papel seco en el fondo de un vaso y se introduce el vaso boca abajo, verticalmente, en un balde con agua. Al sacarlo, el papel sigue seco. ¿Por qué?",
+ o:["El agua le tiene miedo al papel","El aire atrapado en el vaso ocupa espacio y no deja entrar el agua","El papel es impermeable","El vaso elimina el agua"],a:1,
+ h:"El vaso no estaba vacío: estaba lleno de algo invisible.",
+ e:"El vaso está lleno de aire. Como el aire ocupa espacio y no puede escapar, impide que el agua suba hasta el papel. ¡El “vaso vacío” en realidad está lleno de gas!"},
+{t:"car",d:3,ty:"particle",q:"Las dos cajas tienen el MISMO número de partículas del mismo gas. ¿Qué cambio se representa de la caja A a la caja B?",
+ p:[{label:"Caja A",n:8,mode:"gas"},{label:"Caja B",n:8,mode:"compressed"}],
+ o:["El gas fue comprimido: mismas partículas en menos espacio","Se agregaron más partículas","Las partículas crecieron de tamaño","El gas se enfrió hasta desaparecer"],a:0,
+ h:"Cuenta las partículas: son las mismas. ¿Qué cambió entonces?",
+ e:"Hay el mismo número de partículas, pero en la caja B están confinadas en un espacio menor: el gas fue comprimido (disminuyó su volumen). Las partículas nunca cambian de tamaño."},
+{t:"car",d:1,ty:"mc",q:"Predicción: si calentamos el aire dentro de un recipiente flexible (como una bolsa cerrada), ¿qué esperamos observar?",
+ o:["La bolsa se infla porque el gas se expande","La bolsa se encoge","No pasa nada","La bolsa se congela"],a:0,
+ h:"Con calor, las partículas se mueven más rápido y necesitan más espacio.",
+ e:"Al calentar, las partículas se mueven más rápido, chocan con más fuerza y el gas se expande: la bolsa se infla. Los gases se expanden con el aumento de temperatura."},
+{t:"car",d:3,ty:"error",er:true,q:"La Criatura del error afirma: “Cuando un gas se expande, sus partículas se inflan y se vuelven más grandes”. Corrijan la afirmación.",
+ h:"En la expansión cambia la DISTANCIA entre partículas, no su tamaño.",
+ e:"Corrección: al expandirse un gas, sus partículas NO cambian de tamaño; lo que aumenta es la distancia entre ellas, pues se distribuyen en un espacio mayor."},
+
+/* ===== LEY DE BOYLE (presión y volumen) ===== */
+{t:"boy",d:1,ty:"mc",q:"Una jeringa contiene aire y su punta está tapada. Al empujar el émbolo, ¿qué ocurre?",
+ o:["Aumenta el volumen y disminuye la presión","Disminuye el volumen y aumenta la presión","Desaparece el aire","Entra más aire"],a:1,
+ h:"El aire queda atrapado: no entra ni sale. Solo cambia el espacio que ocupa.",
+ e:"El aire atrapado se comprime: su volumen disminuye y, según la ley de Boyle, su presión aumenta (relación inversa, a temperatura constante)."},
+{t:"boy",d:1,ty:"mc",q:"Según la ley de Boyle, a temperatura constante, la presión y el volumen de un gas tienen una relación…",
+ o:["Directa: si una aumenta, la otra aumenta","Inversa: si una aumenta, la otra disminuye","No se relacionan","Solo se relacionan en el agua"],a:1,
+ h:"P₁V₁ = P₂V₂: para que el producto sea constante, si uno sube el otro debe bajar.",
+ e:"La relación es INVERSA: al aumentar la presión, el volumen disminuye, y viceversa, siempre que la temperatura y la cantidad de gas no cambien. Fórmula: P₁V₁ = P₂V₂."},
+{t:"boy",d:2,ty:"num",q:"Una jeringa contiene 20 mL de aire a 1 atm de presión. Se comprime hasta 10 mL sin cambiar la temperatura. Calcula la nueva presión (en atm).",
+ a:2, u:"atm",
+ h:"Usa P₁V₁ = P₂V₂ y despeja P₂ = P₁V₁ ÷ V₂.",
+ e:"El volumen se redujo a la mitad, así que la presión se duplica.",
+ s:["Datos: P₁ = 1 atm, V₁ = 20 mL, V₂ = 10 mL. Incógnita: P₂","Fórmula (ley de Boyle): P₁V₁ = P₂V₂","Despeje: P₂ = P₁V₁ ÷ V₂","Reemplazo: P₂ = (1 atm × 20 mL) ÷ 10 mL","Respuesta: P₂ = 2 atm"]},
+{t:"boy",d:2,ty:"num",q:"Un gas ocupa 4 L a una presión de 2 atm. Si la presión disminuye a 1 atm (a temperatura constante), ¿cuál será el nuevo volumen en litros?",
+ a:8, u:"L",
+ h:"Despeja V₂ = P₁V₁ ÷ P₂. Menos presión → más volumen.",
+ e:"Al reducirse la presión a la mitad, el volumen se duplica.",
+ s:["Datos: P₁ = 2 atm, V₁ = 4 L, P₂ = 1 atm. Incógnita: V₂","Fórmula: P₁V₁ = P₂V₂","Despeje: V₂ = P₁V₁ ÷ P₂","Reemplazo: V₂ = (2 atm × 4 L) ÷ 1 atm","Respuesta: V₂ = 8 L"]},
+{t:"boy",d:1,ty:"vf",q:"Verdadero o falso: “Si el volumen de un gas se reduce a la mitad, su presión se duplica (a temperatura constante)”.",a:true,
+ h:"Comprueba con números fáciles: V pasa de 10 a 5… ¿qué debe hacer P para que P×V no cambie?",
+ e:"VERDADERO. En la ley de Boyle el producto P×V es constante. Si V baja a la mitad, P debe duplicarse para conservar el producto."},
+{t:"boy",d:2,ty:"mc",q:"Un buzo suelta una burbuja de aire en el fondo de una piscina profunda. A medida que la burbuja sube, la presión del agua sobre ella disminuye. ¿Qué le pasa a la burbuja?",
+ o:["Se hace más pequeña","Se hace más grande","Mantiene su tamaño","Se convierte en agua"],a:1,
+ h:"Menos presión sobre el gas significa… ¿más o menos volumen?",
+ e:"Al subir, la presión externa disminuye y, por la ley de Boyle, el volumen del gas aumenta: la burbuja se agranda. Por eso los buzos nunca deben contener la respiración al ascender."},
+{t:"boy",d:2,ty:"num",q:"Un gas está a 3 atm de presión y ocupa 2 L. Se deja expandir hasta 6 L a temperatura constante. Calcula la nueva presión (en atm).",
+ a:1, u:"atm",
+ h:"P₂ = P₁V₁ ÷ V₂. El volumen se triplicó…",
+ e:"El volumen se triplicó, por lo tanto la presión se reduce a la tercera parte.",
+ s:["Datos: P₁ = 3 atm, V₁ = 2 L, V₂ = 6 L. Incógnita: P₂","Fórmula: P₁V₁ = P₂V₂","Despeje: P₂ = P₁V₁ ÷ V₂","Reemplazo: P₂ = (3 atm × 2 L) ÷ 6 L","Respuesta: P₂ = 1 atm"]},
+{t:"boy",d:2,ty:"error",er:true,q:"La Criatura del error afirma: “Cuando comprimimos un gas, aumenta la presión porque entran más partículas al recipiente”. Corrijan y justifiquen.",
+ h:"En una jeringa tapada, ¿pueden entrar partículas nuevas?",
+ e:"Corrección: al comprimir NO entran partículas nuevas. La presión aumenta porque las MISMAS partículas quedan en un espacio menor y chocan con más frecuencia contra las paredes."},
+{t:"boy",d:3,ty:"mc",q:"En la ley de Boyle, ¿qué cantidad se mantiene constante al multiplicar la presión por el volumen?",
+ o:["P + V","P × V","P ÷ V","V − P"],a:1,
+ h:"Observa la forma de la fórmula: P₁V₁ = P₂V₂.",
+ e:"El PRODUCTO P×V es constante (a temperatura y cantidad de gas constantes). Por eso P₁V₁ = P₂V₂: el producto inicial es igual al producto final."},
+{t:"boy",d:3,ty:"num",q:"Un gas ocupa 500 mL a 0,8 atm. Se comprime hasta que su presión llega a 2 atm, sin cambiar la temperatura. ¿Cuál es el nuevo volumen en mL?",
+ a:200, u:"mL",
+ h:"V₂ = P₁V₁ ÷ P₂ = (0,8 × 500) ÷ 2.",
+ e:"La presión aumentó 2,5 veces, así que el volumen se reduce 2,5 veces.",
+ s:["Datos: P₁ = 0,8 atm, V₁ = 500 mL, P₂ = 2 atm. Incógnita: V₂","Fórmula: P₁V₁ = P₂V₂","Despeje: V₂ = P₁V₁ ÷ P₂","Reemplazo: V₂ = (0,8 atm × 500 mL) ÷ 2 atm = 400 ÷ 2","Respuesta: V₂ = 200 mL"]},
+{t:"boy",d:2,ty:"oral",q:"Reto de explicación oral: un paquete sellado de papas se lleva desde Medellín hasta un páramo, donde la presión del aire es menor. El paquete llega inflado como un globo. Expliquen por qué, usando la ley de Boyle.",
+ h:"La presión de AFUERA bajó… ¿qué hace entonces el gas de adentro?",
+ e:"En el páramo la presión atmosférica es menor. El aire atrapado en el paquete queda sometido a menos presión externa y, por la ley de Boyle, su volumen aumenta: el paquete se infla."},
+{t:"boy",d:1,ty:"mc",q:"Completa la relación: “Según la ley de Boyle, si la presión sobre un gas AUMENTA, su volumen ______ (a temperatura constante)”.",
+ o:["aumenta","disminuye","se mantiene igual","se vuelve cero"],a:1,
+ h:"Recuerda: relación inversa.",
+ e:"El volumen DISMINUYE. Presión y volumen son inversamente proporcionales cuando la temperatura y la cantidad de gas permanecen constantes."},
+{t:"boy",d:2,ty:"mc",lab:true,q:"Experimento: se mete un masmelo dentro de una jeringa, se tapa la punta y se HALA el émbolo. El masmelo se agranda. ¿Por qué?",
+ o:["El masmelo absorbe aire de afuera","Al aumentar el volumen de la jeringa, la presión interna baja y el aire atrapado dentro del masmelo se expande","El masmelo se calienta","El azúcar se convierte en gas"],a:1,
+ h:"El masmelo está lleno de burbujitas de aire. ¿Qué les pasa cuando baja la presión a su alrededor?",
+ e:"Al halar el émbolo aumenta el volumen y disminuye la presión dentro de la jeringa (ley de Boyle). Las burbujas de aire atrapadas en el masmelo quedan con más presión interna que el entorno y se expanden: el masmelo “crece”."},
+
+/* ===== LEY DE CHARLES (volumen y temperatura) ===== */
+{t:"cha",d:1,ty:"mc",q:"Un globo se coloca en un lugar caliente y aumenta su tamaño. ¿Qué ley ayuda a explicarlo?",
+ o:["Boyle","Charles","Gay-Lussac","Gravitación"],a:1,
+ h:"¿Qué dos variables cambian aquí? Temperatura y… (la presión casi no cambia en un globo).",
+ e:"Es la ley de Charles: a presión constante, el volumen de un gas aumenta cuando aumenta su temperatura (relación directa). Fórmula: V₁/T₁ = V₂/T₂."},
+{t:"cha",d:1,ty:"mc",q:"Para usar la ley de Charles, la temperatura de 25 °C debe convertirse a kelvin. ¿Cuál es el resultado?",
+ o:["25 K","248 K","298 K","273 K"],a:2,
+ h:"K = °C + 273.",
+ e:"K = °C + 273 = 25 + 273 = 298 K. En las leyes de los gases la temperatura SIEMPRE debe estar en kelvin."},
+{t:"cha",d:2,ty:"num",q:"Un gas ocupa 2 L a 300 K. Se calienta hasta 600 K a presión constante. ¿Cuál es el nuevo volumen en litros?",
+ a:4, u:"L",
+ h:"V₂ = V₁ × T₂ ÷ T₁. La temperatura se duplicó…",
+ e:"La temperatura absoluta se duplicó, así que el volumen también se duplica (relación directa).",
+ s:["Datos: V₁ = 2 L, T₁ = 300 K, T₂ = 600 K. Incógnita: V₂","Fórmula (ley de Charles): V₁/T₁ = V₂/T₂","Despeje: V₂ = V₁ × T₂ ÷ T₁","Reemplazo: V₂ = (2 L × 600 K) ÷ 300 K","Respuesta: V₂ = 4 L"]},
+{t:"cha",d:1,ty:"vf",q:"Verdadero o falso: “En la ley de Charles se pueden usar las temperaturas directamente en grados Celsius”.",a:false,
+ h:"¿Qué pasaría al dividir entre 0 °C?",
+ e:"FALSO. Las temperaturas deben convertirse a kelvin (K = °C + 273). Con grados Celsius los cocientes dan resultados incorrectos e incluso divisiones entre cero."},
+{t:"cha",d:3,ty:"num",q:"Un gas ocupa 1,5 L a 27 °C. Se calienta hasta 127 °C a presión constante. Calcula el nuevo volumen en litros. (¡Convierte primero a kelvin!)",
+ a:2, u:"L",
+ h:"27 °C = 300 K y 127 °C = 400 K. Luego V₂ = V₁ × T₂ ÷ T₁.",
+ e:"Primero se convierte a kelvin y luego se aplica la relación directa entre V y T.",
+ s:["Convertir: T₁ = 27 + 273 = 300 K; T₂ = 127 + 273 = 400 K","Datos: V₁ = 1,5 L, T₁ = 300 K, T₂ = 400 K. Incógnita: V₂","Fórmula: V₁/T₁ = V₂/T₂","Despeje: V₂ = V₁ × T₂ ÷ T₁ = (1,5 × 400) ÷ 300","Respuesta: V₂ = 2 L"]},
+{t:"cha",d:1,ty:"mc",q:"Según la ley de Charles, a presión constante, el volumen y la temperatura (en kelvin) tienen una relación…",
+ o:["Inversa","Directa: si la temperatura aumenta, el volumen aumenta","Nula","Directa solo en invierno"],a:1,
+ h:"V₁/T₁ = V₂/T₂: el cociente se mantiene constante.",
+ e:"La relación es DIRECTA: al aumentar la temperatura absoluta, el volumen aumenta en la misma proporción, siempre que la presión no cambie."},
+{t:"cha",d:2,ty:"error",er:true,q:"La Criatura del error afirma: “Un globo inflado se encoge dentro de la nevera porque el gas se escapa por el frío”. Corrijan y justifiquen.",
+ h:"El globo sigue cerrado: el gas no sale. ¿Qué cambió entonces?",
+ e:"Corrección: el gas NO se escapa. Al bajar la temperatura, las partículas se mueven más lento y el gas ocupa menos volumen (ley de Charles): el globo se encoge, pero con las mismas partículas adentro."},
+{t:"cha",d:1,ty:"mc",q:"Completa la relación: “A presión constante, si la temperatura en kelvin de un gas se duplica, su volumen ______”.",
+ o:["se reduce a la mitad","se duplica","no cambia","se cuadruplica"],a:1,
+ h:"Relación directa y proporcional.",
+ e:"El volumen SE DUPLICA. En la ley de Charles, V y T (en kelvin) son directamente proporcionales: crecen en la misma proporción."},
+{t:"cha",d:2,ty:"mc",q:"Un globo aerostático se eleva cuando se calienta el aire de su interior. Esto ocurre porque el aire caliente…",
+ o:["Pesa más que el frío","Se expande, ocupa más volumen y se vuelve menos denso","Se convierte en helio","Se congela"],a:1,
+ h:"Piensa en la ley de Charles y luego en la densidad.",
+ e:"Al calentarse, el aire se expande (ley de Charles) y su densidad disminuye. El aire caliente, menos denso, “flota” sobre el aire frío exterior y el globo se eleva."},
+{t:"cha",d:3,ty:"num",q:"Un gas ocupa 250 mL a 290 K. ¿A qué temperatura (en K) debe calentarse, a presión constante, para que ocupe 500 mL?",
+ a:580, u:"K",
+ h:"Despeja T₂ = T₁ × V₂ ÷ V₁.",
+ e:"Para duplicar el volumen se debe duplicar la temperatura absoluta.",
+ s:["Datos: V₁ = 250 mL, T₁ = 290 K, V₂ = 500 mL. Incógnita: T₂","Fórmula: V₁/T₁ = V₂/T₂","Despeje: T₂ = T₁ × V₂ ÷ V₁","Reemplazo: T₂ = (290 K × 500 mL) ÷ 250 mL","Respuesta: T₂ = 580 K"]},
+{t:"cha",d:2,ty:"particle",q:"Las dos cajas muestran el mismo gas en un recipiente flexible, con el mismo número de partículas. ¿Qué variable cambió de A a B?",
+ p:[{label:"Caja A",n:8,mode:"slow"},{label:"Caja B",n:8,mode:"hot"}],
+ o:["Aumentó la temperatura: las partículas se mueven más rápido","Disminuyó la cantidad de gas","Aumentó la cantidad de gas","Nada cambió"],a:0,
+ h:"Fíjate en la velocidad de las partículas (color y movimiento).",
+ e:"Las partículas de la caja B se mueven mucho más rápido: eso indica un aumento de temperatura. La temperatura es una medida del movimiento promedio de las partículas."},
+{t:"cha",d:1,ty:"vf",q:"Verdadero o falso: “0 °C equivale a 273 K”.",a:true,
+ h:"K = °C + 273.",
+ e:"VERDADERO. K = 0 + 273 = 273 K. El cero de la escala kelvin (0 K = −273 °C) es la temperatura más baja posible."},
+{t:"cha",d:2,ty:"oral",q:"Reto de explicación oral: expliquen por qué NO es buena idea dejar globos inflados dentro de un carro cerrado y estacionado al sol en Medellín.",
+ h:"¿Qué le pasa al volumen del gas cuando la temperatura sube mucho?",
+ e:"Dentro del carro la temperatura sube mucho. Por la ley de Charles, el gas de los globos se expande; si el material no resiste el aumento de volumen, los globos pueden estallar."},
+{t:"cha",d:2,ty:"mc",lab:true,q:"Experimento: se coloca un globo desinflado en la boca de una botella de vidrio y se sumerge la botella en agua caliente. El globo comienza a inflarse. ¿Por qué?",
+ o:["El agua entra a la botella","El aire de la botella se calienta, se expande y sube a inflar el globo","El vidrio produce aire nuevo","El globo absorbe vapor"],a:1,
+ h:"El aire encerrado en la botella se está calentando…",
+ e:"El aire dentro de la botella aumenta su temperatura y se expande (ley de Charles). Como necesita más espacio, empuja hacia el globo y lo infla."},
+{t:"cha",d:2,ty:"mc",lab:true,q:"Experimento: un globo inflado se deja 20 minutos en el congelador y sale notablemente más pequeño. ¿Qué variable disminuyó y qué le pasó al volumen?",
+ o:["Disminuyó la temperatura y el volumen disminuyó","Disminuyó la presión y el volumen aumentó","Aumentó la temperatura y el volumen aumentó","Disminuyó la cantidad de gas"],a:0,
+ h:"El congelador baja UNA variable de estado… ¿cuál?",
+ e:"Bajó la temperatura y, por la ley de Charles (relación directa V–T), el volumen del gas también disminuyó: el globo se encogió sin perder aire."},
+
+/* ===== LEY DE GAY-LUSSAC (presión y temperatura) ===== */
+{t:"gay",d:1,ty:"mc",q:"Una lata de aerosol cerrada se deja cerca del fuego. Si el volumen permanece constante, ¿qué ocurre con la presión al aumentar la temperatura?",
+ o:["Disminuye","Aumenta","No cambia","Se vuelve negativa"],a:1,
+ h:"Las partículas más calientes chocan más fuerte y más seguido contra las paredes.",
+ e:"Por la ley de Gay-Lussac, a volumen constante la presión aumenta con la temperatura. Por eso las latas de aerosol pueden explotar si se calientan: ¡nunca deben acercarse al fuego!"},
+{t:"gay",d:1,ty:"mc",q:"Según la ley de Gay-Lussac, a volumen constante, la presión y la temperatura (en kelvin) tienen una relación…",
+ o:["Directa: si la temperatura aumenta, la presión aumenta","Inversa","Nula","Directa solo con oxígeno"],a:0,
+ h:"P₁/T₁ = P₂/T₂: el cociente se mantiene constante.",
+ e:"La relación es DIRECTA: al aumentar la temperatura absoluta de un gas encerrado en un recipiente rígido, su presión aumenta en la misma proporción. Fórmula: P₁/T₁ = P₂/T₂."},
+{t:"gay",d:2,ty:"num",q:"Un gas encerrado en un recipiente rígido está a 2 atm y 300 K. Se calienta hasta 600 K. Calcula la nueva presión (en atm).",
+ a:4, u:"atm",
+ h:"P₂ = P₁ × T₂ ÷ T₁. La temperatura se duplicó…",
+ e:"Al duplicarse la temperatura absoluta, la presión también se duplica (el volumen no puede cambiar).",
+ s:["Datos: P₁ = 2 atm, T₁ = 300 K, T₂ = 600 K. Incógnita: P₂","Fórmula (ley de Gay-Lussac): P₁/T₁ = P₂/T₂","Despeje: P₂ = P₁ × T₂ ÷ T₁","Reemplazo: P₂ = (2 atm × 600 K) ÷ 300 K","Respuesta: P₂ = 4 atm"]},
+{t:"gay",d:2,ty:"vf",q:"Verdadero o falso: “Después de un viaje largo por carretera, la presión del aire en las llantas de un carro suele ser mayor que al inicio”.",a:true,
+ h:"La fricción con el pavimento calienta las llantas y el aire de adentro.",
+ e:"VERDADERO. La fricción calienta el aire dentro de la llanta (volumen casi constante) y, por la ley de Gay-Lussac, su presión aumenta. Por eso la presión se mide con las llantas frías."},
+{t:"gay",d:2,ty:"error",er:true,q:"La Criatura del error afirma: “Si caliento una olla a presión bien cerrada, la presión interna disminuye porque el vapor se relaja con el calor”. Corrijan y justifiquen.",
+ h:"¿Relajarse? Las partículas calientes se mueven MÁS, no menos.",
+ e:"Corrección: al calentar, las partículas del gas se mueven más rápido y chocan con más fuerza y frecuencia contra las paredes: la presión AUMENTA (ley de Gay-Lussac). Por eso las ollas a presión tienen válvulas de seguridad."},
+{t:"gay",d:3,ty:"num",q:"Un gas en un recipiente rígido tiene una presión de 1,2 atm a 290 K. ¿A qué temperatura (en K) su presión será de 2,4 atm?",
+ a:580, u:"K",
+ h:"Despeja T₂ = T₁ × P₂ ÷ P₁.",
+ e:"Para duplicar la presión hay que duplicar la temperatura absoluta.",
+ s:["Datos: P₁ = 1,2 atm, T₁ = 290 K, P₂ = 2,4 atm. Incógnita: T₂","Fórmula: P₁/T₁ = P₂/T₂","Despeje: T₂ = T₁ × P₂ ÷ P₁","Reemplazo: T₂ = (290 K × 2,4 atm) ÷ 1,2 atm","Respuesta: T₂ = 580 K"]},
+{t:"gay",d:1,ty:"mc",q:"¿Por qué las latas de aerosol traen la advertencia “No exponer al sol ni arrojar al fuego”?",
+ o:["Porque el gas interno aumenta su presión con la temperatura y la lata puede explotar","Porque el sol daña la pintura","Porque el gas se congela","Porque pierden el olor"],a:0,
+ h:"Volumen constante + temperatura en aumento = …",
+ e:"La lata es un recipiente rígido y cerrado. Si la temperatura sube, la presión interna aumenta (ley de Gay-Lussac) y puede superar la resistencia del envase, causando una explosión."},
+{t:"gay",d:1,ty:"mc",q:"Completa la relación: “A volumen constante, si la temperatura de un gas DISMINUYE, su presión ______”.",
+ o:["aumenta","disminuye","se duplica","no cambia"],a:1,
+ h:"Relación directa: van en el mismo sentido.",
+ e:"La presión DISMINUYE. En la ley de Gay-Lussac, presión y temperatura absoluta son directamente proporcionales: si una baja, la otra baja."},
+{t:"gay",d:2,ty:"mc",q:"En una madrugada muy fría, el sensor del carro avisa “presión de llantas baja”, pero al medio día la alerta desaparece sin haber echado aire. ¿Qué pasó?",
+ o:["El sensor se dañó","Al subir la temperatura del día, el aire de las llantas aumentó su presión","Las llantas absorbieron aire del pavimento","La gravedad cambió"],a:1,
+ h:"¿Qué variable cambia entre la madrugada y el medio día?",
+ e:"En la madrugada fría la presión del aire era menor; al calentarse el ambiente y las llantas, la presión aumentó (ley de Gay-Lussac) y la alerta se apagó."},
+{t:"gay",d:3,ty:"num",q:"Un recipiente rígido contiene gas a 3 atm y 250 K. Si la temperatura sube a 300 K, ¿cuál es la nueva presión en atm? (Escribe el resultado con un decimal).",
+ a:3.6, u:"atm",
+ h:"P₂ = P₁ × T₂ ÷ T₁ = 3 × 300 ÷ 250.",
+ e:"La temperatura aumentó 1,2 veces, así que la presión también aumenta 1,2 veces.",
+ s:["Datos: P₁ = 3 atm, T₁ = 250 K, T₂ = 300 K. Incógnita: P₂","Fórmula: P₁/T₁ = P₂/T₂","Despeje: P₂ = P₁ × T₂ ÷ T₁","Reemplazo: P₂ = (3 atm × 300 K) ÷ 250 K = 900 ÷ 250","Respuesta: P₂ = 3,6 atm"]},
+{t:"gay",d:2,ty:"particle",q:"Un recipiente RÍGIDO y cerrado contiene un gas. En la caja B las partículas se mueven mucho más rápido que en la A. ¿Qué se puede concluir sobre la presión en B?",
+ p:[{label:"Caja A",n:8,mode:"slow"},{label:"Caja B",n:8,mode:"hotsame"}],
+ o:["La presión en B es mayor, porque las partículas chocan más fuerte y más seguido","La presión en B es menor","La presión es igual en ambas","En B no hay presión"],a:0,
+ h:"El recipiente no puede expandirse: los choques extra se convierten en más presión.",
+ e:"Como el volumen no puede cambiar, el aumento de velocidad de las partículas produce choques más fuertes y frecuentes contra las paredes: la presión aumenta (ley de Gay-Lussac)."},
+{t:"gay",d:2,ty:"oral",lab:true,q:"Reto de explicación oral: en el laboratorio hay una botella plástica RÍGIDA, bien cerrada, que se dejó al sol. Al abrirla se escucha un fuerte “¡pssst!”. Expliquen ese sonido usando la ley de Gay-Lussac.",
+ h:"¿La presión de adentro terminó igual a la de afuera?",
+ e:"Al calentarse el aire dentro de la botella cerrada, su presión aumentó por encima de la presión atmosférica (ley de Gay-Lussac). Al abrirla, el gas a mayor presión escapa bruscamente y produce el sonido."},
+{t:"gay",d:3,ty:"error",er:true,q:"La Criatura del error afirma: “Al calentar un gas en un recipiente cerrado, la presión sube porque se crean partículas nuevas de gas”. Corrijan la afirmación.",
+ h:"El recipiente está cerrado: nada entra ni se crea. ¿Qué cambia en las partículas?",
+ e:"Corrección: NO se crean partículas nuevas. La presión sube porque las mismas partículas se mueven más rápido y chocan con más fuerza y frecuencia contra las paredes del recipiente."},
+
+/* ===== DESPEJE DE VARIABLES ===== */
+{t:"des",d:1,ty:"order",q:"Ordena los pasos para resolver correctamente un ejercicio de leyes de los gases:",
+ o:["Identificar los datos","Seleccionar la fórmula","Despejar la incógnita","Reemplazar los valores","Escribir la respuesta con unidad"],
+ h:"Primero hay que saber QUÉ tenemos y QUÉ nos piden.",
+ e:"El orden correcto es: 1) identificar los datos, 2) seleccionar la fórmula, 3) despejar la incógnita, 4) reemplazar los valores y 5) escribir la respuesta con su unidad."},
+{t:"des",d:1,ty:"mc",q:"En la fórmula P₁V₁ = P₂V₂, ¿cómo se despeja V₂?",
+ o:["V₂ = P₁V₁ × P₂","V₂ = P₁V₁ ÷ P₂","V₂ = P₂ ÷ P₁V₁","V₂ = P₁ + V₁ − P₂"],a:1,
+ h:"V₂ está multiplicado por P₂: pasa al otro lado dividiendo.",
+ e:"Como P₂ multiplica a V₂, pasa al otro lado a dividir: V₂ = P₁V₁ ÷ P₂."},
+{t:"des",d:2,ty:"mc",q:"En la fórmula V₁/T₁ = V₂/T₂, ¿cómo se despeja T₂?",
+ o:["T₂ = V₂ × T₁ ÷ V₁","T₂ = V₁ × T₁ ÷ V₂","T₂ = V₂ ÷ (T₁ × V₁)","T₂ = T₁ − V₂"],a:0,
+ h:"T₂ está dividiendo: primero pásalo a multiplicar y luego despeja.",
+ e:"De V₁/T₁ = V₂/T₂, multiplicando en cruz: V₁ × T₂ = V₂ × T₁. Luego, T₂ = V₂ × T₁ ÷ V₁."},
+{t:"des",d:1,ty:"mc",q:"Lee el enunciado: “Un gas a 1 atm ocupa 3 L; si se comprime hasta 1 L, ¿cuál es la presión final?”. ¿Cuál es la INCÓGNITA?",
+ o:["V₁","P₁","P₂","T₂"],a:2,
+ h:"La incógnita es lo que se pregunta al final.",
+ e:"La incógnita es P₂, la presión final. Los datos son P₁ = 1 atm, V₁ = 3 L y V₂ = 1 L."},
+{t:"des",d:2,ty:"mc",q:"En la fórmula P₁/T₁ = P₂/T₂, ¿cómo se despeja P₂?",
+ o:["P₂ = P₁ × T₂ ÷ T₁","P₂ = P₁ × T₁ ÷ T₂","P₂ = T₂ ÷ (P₁ × T₁)","P₂ = P₁ − T₂"],a:0,
+ h:"T₂ está dividiendo a P₂: pasa a multiplicar al otro lado.",
+ e:"De P₁/T₁ = P₂/T₂, se multiplica ambos lados por T₂: P₂ = P₁ × T₂ ÷ T₁."},
+{t:"des",d:1,ty:"vf",q:"Verdadero o falso: “En P₁V₁ = P₂V₂, para despejar P₂ se divide todo entre V₂”.",a:true,
+ h:"P₂ está multiplicado por V₂…",
+ e:"VERDADERO. Como V₂ multiplica a P₂, se divide entre V₂ a ambos lados: P₂ = P₁V₁ ÷ V₂."},
+{t:"des",d:2,ty:"num",q:"Aplica el despeje: si P₁ = 2 atm, V₁ = 6 L y V₂ = 4 L (temperatura constante), calcula P₂ en atm.",
+ a:3, u:"atm",
+ h:"P₂ = P₁V₁ ÷ V₂ = (2 × 6) ÷ 4.",
+ e:"Se usa la ley de Boyle con el despeje de P₂.",
+ s:["Datos: P₁ = 2 atm, V₁ = 6 L, V₂ = 4 L. Incógnita: P₂","Fórmula: P₁V₁ = P₂V₂","Despeje: P₂ = P₁V₁ ÷ V₂","Reemplazo: P₂ = (2 atm × 6 L) ÷ 4 L = 12 ÷ 4","Respuesta: P₂ = 3 atm"]},
+{t:"des",d:2,ty:"mc",q:"Completa las relaciones: la fórmula V₁/T₁ = V₂/T₂ corresponde a la ley de ______ y la fórmula P₁/T₁ = P₂/T₂ a la ley de ______.",
+ o:["Boyle y Charles","Charles y Gay-Lussac","Gay-Lussac y Boyle","Charles y Boyle"],a:1,
+ h:"Charles relaciona V con T; Gay-Lussac relaciona P con T.",
+ e:"V₁/T₁ = V₂/T₂ es la ley de Charles (volumen–temperatura) y P₁/T₁ = P₂/T₂ es la ley de Gay-Lussac (presión–temperatura). La de Boyle es P₁V₁ = P₂V₂."},
+{t:"des",d:3,ty:"order",q:"Ordena los pasos para resolver: “Un gas ocupa 2 L a 27 °C; ¿qué volumen ocupará a 127 °C, a presión constante?”",
+ o:["Convertir las temperaturas a kelvin (300 K y 400 K)","Identificar datos e incógnita (V₂)","Escribir la fórmula V₁/T₁ = V₂/T₂","Despejar V₂ = V₁ × T₂ ÷ T₁","Reemplazar y calcular: V₂ = 2 × 400 ÷ 300 ≈ 2,7 L"],
+ h:"Antes de usar cualquier fórmula con temperatura… ¡kelvin!",
+ e:"Con temperaturas SIEMPRE se convierte primero a kelvin; luego se identifican datos, se escribe la fórmula, se despeja y se calcula con unidades."}
+];
+
+/* ---- Preguntas del jefe final (integradoras, abiertas) ---- */
+const BOSS_QUESTIONS = [
+ {q:"Una jeringa tapada contiene 30 mL de aire a 1 atm y se comprime hasta 10 mL sin cambiar la temperatura. Calculen la presión final y expliquen qué les pasa a las partículas.",
+  a:"P₂ = P₁V₁ ÷ V₂ = (1 × 30) ÷ 10 = 3 atm. Las mismas partículas quedan en un espacio 3 veces menor, chocan más seguido contra las paredes y la presión se triplica (ley de Boyle)."},
+ {q:"Un globo inflado se lleva de Medellín a un páramo, donde hay menos presión atmosférica y más frío. Un efecto tiende a AGRANDAR el globo y otro a ENCOGERLO. Identifiquen cada efecto y la ley que lo explica.",
+  a:"Menor presión externa → el gas se expande y el globo tiende a agrandarse (ley de Boyle). Menor temperatura → el gas se contrae y el globo tiende a encogerse (ley de Charles). El resultado final depende de cuál efecto sea mayor."},
+ {q:"Una lata de aerosol cerrada queda dentro de un carro al sol y su temperatura pasa de 300 K a 330 K. Si empezó a 2 atm, calculen la presión final y expliquen el riesgo.",
+  a:"P₂ = P₁ × T₂ ÷ T₁ = 2 × 330 ÷ 300 = 2,2 atm. A volumen constante, la presión sube con la temperatura (ley de Gay-Lussac); si sigue calentándose, la lata puede explotar."},
+ {q:"Un gas ocupa 3 L a 27 °C. Conviertan la temperatura a kelvin y calculen el volumen si se calienta hasta 327 °C a presión constante.",
+  a:"T₁ = 27 + 273 = 300 K; T₂ = 327 + 273 = 600 K. V₂ = V₁ × T₂ ÷ T₁ = 3 × 600 ÷ 300 = 6 L. Al duplicarse la temperatura absoluta, el volumen se duplica (ley de Charles)."},
+ {q:"Usando el modelo de partículas, describan qué ocurre dentro de un recipiente cuando el gas: (a) se comprime, y (b) se calienta.",
+  a:"(a) Al comprimir: las mismas partículas quedan más cerca, chocan más seguido con las paredes y la presión aumenta. (b) Al calentar: las partículas se mueven más rápido y chocan con más fuerza; si el recipiente es rígido sube la presión, y si es flexible el gas se expande."}
+];
+
+/* ---- Escenarios de “Noche de partículas” ---- */
+const NIGHT_EVENTS = [
+ {p:[{label:"Antes",n:8,mode:"gas"},{label:"Después",n:8,mode:"hot"}],
+  q:"Ha caído la noche… El modelo muestra el mismo gas antes y después de un cambio. ¿Qué variable cambió?",
+  o:["Aumentó la temperatura","Disminuyó la cantidad de gas","Aumentó la cantidad de gas","Disminuyó la presión externa"],a:0,
+  e:"Las partículas pasaron a moverse mucho más rápido: eso indica un aumento de temperatura."},
+ {p:[{label:"Antes",n:6,mode:"gas"},{label:"Después",n:10,mode:"gas"}],
+  q:"Ha caído la noche… Observa el modelo. ¿Qué variable cambió del estado inicial al final?",
+  o:["Aumentó la cantidad de gas (hay más partículas)","Aumentó la temperatura","Disminuyó el volumen","El gas se volvió líquido"],a:0,
+  e:"Ahora hay MÁS partículas en el mismo espacio: aumentó la cantidad de gas (por ejemplo, al inyectar más aire), lo que también eleva la presión."},
+ {p:[{label:"Antes",n:8,mode:"gas"},{label:"Después",n:8,mode:"compressed"}],
+  q:"Ha caído la noche… El modelo muestra el mismo número de partículas. ¿Qué variable cambió?",
+  o:["Disminuyó el volumen: el gas fue comprimido","Aumentó la cantidad de gas","Disminuyó la temperatura hasta congelarlo","Nada cambió"],a:0,
+  e:"Las mismas partículas quedaron confinadas en un espacio menor: el volumen disminuyó (compresión), así que la presión aumentó."}
+];
+
+/* ---- Retos de construcción contrarreloj (ordenar en 60 s) ---- */
+const RUSH_EVENTS = [
+ {q:"¡Construcción contrarreloj! (60 s) Ordenen la cadena lógica de la ley de BOYLE:",
+  o:["Se empuja el émbolo de la jeringa tapada","El volumen del gas disminuye","Las partículas chocan más seguido contra las paredes","La presión del gas aumenta"],
+  e:"Al comprimir: baja el volumen → más choques por segundo → sube la presión. Esa es la relación inversa de Boyle."},
+ {q:"¡Construcción contrarreloj! (60 s) Ordenen la cadena lógica de la ley de CHARLES:",
+  o:["Se calienta el gas de un recipiente flexible","Las partículas se mueven más rápido","El gas necesita más espacio y empuja las paredes","El volumen del gas aumenta"],
+  e:"Al calentar: partículas más rápidas → empujan más → el volumen aumenta. Relación directa entre temperatura y volumen."},
+ {q:"¡Construcción contrarreloj! (60 s) Ordenen estas temperaturas de MENOR a MAYOR:",
+  o:["0 °C (= 273 K)","25 °C (= 298 K)","310 K","350 K"],
+  e:"Convertidas a kelvin: 273 K < 298 K < 310 K < 350 K. Para comparar temperaturas en leyes de gases, ¡siempre kelvin!"}
+];
+</script>
+
+<script>
+/* ============================================================
+   LÓGICA DEL JUEGO
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(p=>p[1]);
+const rnd = arr => arr[Math.floor(Math.random()*arr.length)];
+const SAVE_KEY = "reino-gases-save-v1";
+
+/* ---------- Sonidos (WebAudio, sin archivos: funciona sin internet) ---------- */
+let audioCtx = null;
+function beep(freq, dur=0.12, type="square", vol=0.15, when=0){
+  if(!state || !state.cfg.sound) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    const master = Math.max(0, Math.min(1, state.cfg.volume ?? 0.75));
+    g.gain.setValueAtTime(vol * master, audioCtx.currentTime + when);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + when + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(audioCtx.currentTime + when); o.stop(audioCtx.currentTime + when + dur);
+  }catch(e){}
+}
+const sfx = {
+  dice: ()=>{ for(let i=0;i<5;i++) beep(220+Math.random()*300, .06, "square", .1, i*.07); },
+  ok:   ()=>{ beep(523,.1); beep(659,.1,"square",.15,.1); beep(784,.18,"square",.15,.2); },
+  bad:  ()=>{ beep(220,.2,"sawtooth",.12); beep(160,.3,"sawtooth",.12,.18); },
+  chest:()=>{ beep(392,.1); beep(523,.1,"square",.15,.1); beep(659,.1,"square",.15,.2); beep(1046,.25,"square",.15,.3); },
+  tick: ()=>{ beep(880,.05,"square",.08); },
+  event:()=>{ beep(311,.15,"triangle",.18); beep(370,.15,"triangle",.18,.15); beep(466,.3,"triangle",.18,.3); },
+  boss: ()=>{ beep(110,.4,"sawtooth",.2); beep(104,.4,"sawtooth",.2,.35); beep(98,.6,"sawtooth",.2,.7); }
+};
+
+/* ---------- Estado global ---------- */
+let state = null;
+
+function newState(cfg){
+  return {
+    cfg,
+    teams: cfg.teamNames.map((n,i)=>({
+      name:n,
+      color:(cfg.teamColors && cfg.teamColors[i]) || TEAM_COLORS[i],
+      avatar:(cfg.teamAvatars && cfg.teamAvatars[i]) || TEAM_AVATARS[i],
+      badge:(cfg.teamBadges && cfg.teamBadges[i]) || TEAM_BADGES[i],
+      pos:0, pts:0, crystals:0,
+      mats:{madera:0,piedra:0,vidrio:0,hierro:0},
+      builds:[], boost:false,
+      stats:{car:{ok:0,tot:0},boy:{ok:0,tot:0},cha:{ok:0,tot:0},gay:{ok:0,tot:0},des:{ok:0,tot:0}}
+    })),
+    turn:0, timeLeft: cfg.minutes*60, paused:false, phase:"board",
+    usedQ:[], bossIdx:0, bossHP:100, bossHits:{}, chain:null
+  };
+}
+
+/* ---------- Casillas del tablero ---------- */
+const TILE_DEFS = {
+  start:{icon:"🏠", bg:"var(--gold)",  name:"Campamento base"},
+  car:  {icon:"❓", bg:"#8FD75E",      name:"Casilla de conocimiento"},
+  boy:  {icon:"⛏️", bg:"#B8804F",      name:"Mina de Boyle"},
+  cha:  {icon:"🌀", bg:"#7EB2FF",      name:"Portal de Charles"},
+  gay:  {icon:"🗼", bg:"#FF8A75",      name:"Torre de Gay-Lussac"},
+  des:  {icon:"🧮", bg:"#C39BD3",      name:"Mesa de despeje"},
+  lab:  {icon:"🔬", bg:"#7FE7D2",      name:"Laboratorio experimental"},
+  chest:{icon:"🎁", bg:"#FFD966",      name:"Cofre científico"},
+  crea: {icon:"👾", bg:"#8E97A8",      name:"Criatura del error conceptual"},
+  build:{icon:"🏗️", bg:"#E0C097",      name:"Zona de construcción"},
+  event:{icon:"⚡", bg:"#F5F18C",      name:"Evento sorpresa"}
+};
+const RING = ["start","car","boy","car","chest","cha","des","car","event","gay",
+              "lab","car","build","boy","car","crea","cha","chest","gay","des",
+              "lab","event","boy","build","cha","car","crea","gay"];
+const COLS = 9, ROWS = 7; // perímetro de 9×7 = 28 casillas
+
+function ringToGrid(i){
+  if(i < COLS)                 return [1, i+1];                        // fila superior →
+  if(i < COLS + ROWS - 2)      return [i - COLS + 2, COLS];            // columna derecha ↓
+  if(i < 2*COLS + ROWS - 2)    return [ROWS, COLS - (i - COLS - ROWS + 2) - 0]; // fila inferior ←
+  return [ROWS - (i - 2*COLS - ROWS + 3), 1];                          // columna izquierda ↑
+}
+
+function buildBoard(){
+  const b = $("board");
+  b.innerHTML = "";
+  b.style.gridTemplateColumns = `repeat(${COLS},1fr)`;
+  b.style.gridTemplateRows = `repeat(${ROWS},1fr)`;
+  RING.forEach((type,i)=>{
+    const d = TILE_DEFS[type];
+    const t = document.createElement("div");
+    t.className = "tile tile-" + type; t.id = "tile-"+i;
+    const [r,c] = ringToGrid(i);
+    t.style.gridRow = r; t.style.gridColumn = c;
+    t.title = d.name;
+    t.innerHTML = `<span class="tnum">${i}</span><span class="tile-icon">${d.icon}</span><span class="tile-label">${d.name}</span>`;
+    b.appendChild(t);
+  });
+  // centro del tablero
+  const center = document.createElement("div");
+  center.className = "board-center";
+  center.style.position = "static";
+  center.style.gridColumn = "2 / "+COLS;
+  center.style.gridRow = "2 / "+ROWS;
+  center.innerHTML = `
+    <div class="biome-icons">
+      <div class="biome-chip" style="--bio-a:#20b978;--bio-b:#174579" data-name="Partículas">🌲</div>
+      <div class="biome-chip" style="--bio-a:#3b4668;--bio-b:#7c5ee6" data-name="Presión">⛏️</div>
+      <div class="biome-chip" style="--bio-a:#56c8ff;--bio-b:#7bdc7d" data-name="Volumen">🏞️</div>
+      <div class="biome-chip" style="--bio-a:#5f2b68;--bio-b:#ff7b36" data-name="Temperatura">🌋</div>
+    </div>
+    <div class="turn-banner" id="turn-banner">…</div>
+    <div class="dice-area">
+      <div id="dice">?</div>
+      <button class="btn" id="btn-roll">🎲 Lanzar el dado</button>
+    </div>
+    <div style="font-size:.85rem; background:rgba(255,255,255,.85); border:3px solid var(--dark); padding:6px 12px;" id="tile-info">Campamento base listo</div>`;
+  b.appendChild(center);
+  $("btn-roll").addEventListener("click", rollDice);
+  // fichas
+  state.teams.forEach((tm,i)=>{
+    const tk = document.createElement("div");
+    tk.className = "token"; tk.id = "token-"+i;
+    tk.style.setProperty("--team-color", tm.color || TEAM_COLORS[i]);
+    tk.style.background = tm.color || TEAM_COLORS[i];
+    tk.dataset.avatar = tm.avatar || TEAM_AVATARS[i] || "🧪";
+    tk.title = tm.name;
+    b.appendChild(tk);
+  });
+  requestAnimationFrame(placeTokens);
+}
+
+function placeTokens(){
+  if(!state) return;
+  const b = $("board");
+  state.teams.forEach((tm,i)=>{
+    const tile = $("tile-"+tm.pos), tk = $("token-"+i);
+    if(!tile || !tk) return;
+    const sameTile = state.teams.filter((t2,j)=>t2.pos===tm.pos && j<i).length;
+    tk.style.left = (tile.offsetLeft + 8 + (sameTile%3)*24) + "px";
+    tk.style.top  = (tile.offsetTop + tile.offsetHeight - 48 - Math.floor(sameTile/3)*18) + "px";
+  });
+}
+window.addEventListener("resize", placeTokens);
+
+function animateTeamToken(index, cls){
+  const tk = $("token-"+index);
+  if(!tk) return;
+  tk.classList.remove("celebrate","oops");
+  void tk.offsetWidth;
+  tk.classList.add(cls);
+  setTimeout(()=>tk.classList.remove(cls), 850);
+}
+
+/* ---------- HUD ---------- */
+function fmtTime(s){ const m=Math.floor(s/60), ss=s%60; return `${String(m).padStart(2,"0")}:${String(ss).padStart(2,"0")}`; }
+function matsStr(m){ return Object.keys(MATS).map(k=>m[k]?`${MATS[k].icon}${m[k]}`:"").filter(Boolean).join(" ") || "— sin materiales —"; }
+
+function renderHUD(){
+  $("hud-time").textContent = fmtTime(state.timeLeft);
+  const h = $("hud-teams"); h.innerHTML = "";
+  state.teams.forEach((tm,i)=>{
+    tm.color = tm.color || TEAM_COLORS[i];
+    tm.avatar = tm.avatar || TEAM_AVATARS[i] || "🧪";
+    tm.badge = tm.badge || TEAM_BADGES[i] || "P";
+    const c = document.createElement("div");
+    c.className = "team-card" + (i===state.turn && state.phase==="board" ? " turn":"");
+    c.style.setProperty("--team-color", tm.color);
+    c.innerHTML = `
+      <div class="tname"><span class="hud-avatar">${tm.avatar}</span><span class="team-dot" style="background:${tm.color}"></span>${tm.name}${tm.boost?" ✨":""}<span title="Insignia">${tm.badge}</span></div>
+      <div class="tstats"><span>⭐ ${tm.pts}</span><span>💎 ${tm.crystals}</span><span>🏗️ ${tm.builds.length}</span></div>
+      <div class="mats">${matsStr(tm.mats)}</div>`;
+    h.appendChild(c);
+  });
+  const tb = $("turn-banner");
+  if(tb){
+    const tm = state.teams[state.turn];
+    tb.innerHTML = `Turno de <span class="hud-avatar" style="display:inline-grid;--team-color:${tm.color}">${tm.avatar}</span> <strong>${tm.name}</strong> · zona activa: <span id="turn-zone">${TILE_DEFS[RING[tm.pos]]?.name || "Mapa"}</span>`;
+  }
+  renderTeacherPerf();
+  saveGame();
+}
+
+/* ---------- Reloj de la partida ---------- */
+let clockInt = null;
+function startClock(){
+  clearInterval(clockInt);
+  clockInt = setInterval(()=>{
+    if(state.paused || state.phase!=="board") return;
+    state.timeLeft--;
+    $("hud-time").textContent = fmtTime(state.timeLeft);
+    if(state.timeLeft===60) toast("⏰ ¡Queda 1 minuto de exploración!");
+    if(state.timeLeft<=0){
+      state.timeLeft = 0;
+      clearInterval(clockInt);
+      centerModal(`
+        <div class="big-emoji">🛡️</div>
+        <h2>¡Se acabó el tiempo de exploración!</h2>
+        <p>El Guardián de la Presión ha despertado. Todos los equipos se unen para el reto final.</p>
+        <div style="margin-top:16px;"><button class="btn red" onclick="closeCenter(); startBoss();">🛡️ ¡Enfrentar al Guardián!</button></div>`);
+      sfx.boss();
+    }
+  },1000);
+}
+
+/* ---------- Dado y movimiento ---------- */
+let rolling = false;
+function rollDice(){
+  if(rolling || state.paused || state.phase!=="board") return;
+  rolling = true;
+  const dice = $("dice"); dice.classList.add("rolling");
+  sfx.dice();
+  let n = 0, ticks = 0;
+  const int = setInterval(()=>{
+    n = 1+Math.floor(Math.random()*6);
+    dice.textContent = n;
+    if(++ticks >= 10){
+      clearInterval(int);
+      dice.classList.remove("rolling");
+      moveTeam(n);
+    }
+  },80);
+}
+
+function moveTeam(steps){
+  const tm = state.teams[state.turn];
+  const tk = $("token-"+state.turn);
+  if(tk) tk.classList.add("walking");
+  let moved = 0;
+  const int = setInterval(()=>{
+    tm.pos = (tm.pos+1) % RING.length;
+    placeTokens(); sfx.tick();
+    if(++moved >= steps){
+      clearInterval(int);
+      if(tk) tk.classList.remove("walking");
+      document.querySelectorAll(".tile").forEach(t=>t.classList.remove("active-tile"));
+      $("tile-"+tm.pos).classList.add("active-tile");
+      $("tile-info").textContent = TILE_DEFS[RING[tm.pos]].name;
+      setTimeout(()=>{ resolveTile(RING[tm.pos]); rolling = false; }, 600);
+    }
+  },420);
+}
+
+function nextTurn(){
+  document.querySelectorAll(".tile").forEach(t=>t.classList.remove("active-tile"));
+  state.turn = (state.turn+1) % state.teams.length;
+  renderHUD();
+}
+
+/* ---------- Resolución de casillas ---------- */
+function resolveTile(type){
+  const enabled = state.cfg.topics;
+  const fallback = () => enabled.length ? rnd(enabled) : "car";
+  switch(type){
+    case "start":
+      giveMaterial(state.teams[state.turn], 1);
+      toast("🏠 Campamento base: el equipo recoge 1 material.");
+      renderHUD(); nextTurn(); break;
+    case "car": case "boy": case "cha": case "gay": case "des":
+      askQuestion(pickQuestion(enabled.includes(type)? type : fallback())); break;
+    case "lab":
+      askQuestion(pickQuestion(null, q=>q.lab)); break;
+    case "crea":
+      askQuestion(pickQuestion(null, q=>q.er), {creature:true}); break;
+    case "chest": openChest(); break;
+    case "build": openBuild(); break;
+    case "event": openEvent(); break;
+  }
+}
+
+/* ---------- Selección de preguntas ---------- */
+function pickQuestion(topic, filter){
+  const dif = state.cfg.dif;
+  const allowedD = dif===1 ? [1] : dif===2 ? [1,2] : [2,3];
+  let pool = QUESTIONS.filter((q,i)=>
+    !state.usedQ.includes(i) &&
+    (topic ? q.t===topic && !q.er : true) &&
+    (filter ? filter(q) : true) &&
+    (!topic || state.cfg.topics.includes(q.t) || true)
+  );
+  let byDif = pool.filter(q=>allowedD.includes(q.d));
+  if(byDif.length) pool = byDif;
+  if(!pool.length){ // se agotó el banco de este tipo: se reutiliza
+    pool = QUESTIONS.filter(q => (topic ? q.t===topic && !q.er : true) && (filter ? filter(q) : true));
+    if(!pool.length) pool = QUESTIONS.filter(q=>!q.er);
+  }
+  const q = rnd(pool);
+  const idx = QUESTIONS.indexOf(q);
+  if(!state.usedQ.includes(idx)) state.usedQ.push(idx);
+  return q;
+}
+
+/* ---------- Modal de pregunta ---------- */
+let qCtx = null; // contexto de la pregunta abierta
+let qTimerInt = null;
+
+const PTS = { mc:10, particle:10, vf:10, order:15, num:20, error:20, oral:15 };
+const TYPE_LABEL = {
+  mc:"Selección múltiple", vf:"Verdadero o falso", num:"Problema matemático",
+  order:"Ordenar los pasos", oral:"Explicación oral", error:"Corregir el error", particle:"Modelo de partículas"
+};
+
+function askQuestion(q, opts={}){
+  qCtx = {q, team: state.teams[state.turn], answered:false, counted:false,
+          creature: !!opts.creature, night: !!opts.night, chainStep: !!opts.chainStep,
+          nightData: opts.nightData || null};
+  const topic = TOPICS[q.t] || {name:"Reto", color:"#555"};
+  $("q-head").style.setProperty("--topic-color", qCtx.creature ? "#8E97A8" : topic.color);
+  $("q-head").style.background = qCtx.creature ? "#5A6472" : topic.color;
+  $("q-tag").textContent = (qCtx.creature ? "👾 Criatura del error · " : "") + TYPE_LABEL[q.ty] + " · " + topic.name;
+  $("q-team").textContent = "Equipo: " + qCtx.team.name;
+  $("q-text").textContent = q.q;
+  const base = PTS[q.ty] * (qCtx.team.boost ? 2 : 1);
+  $("q-pts").textContent = "Vale hasta " + (q.ty==="vf" ? (base+5*(qCtx.team.boost?2:1)) : base) + " puntos" +
+    (qCtx.team.boost ? " ✨ (¡puntaje doble activado!)" : "") +
+    (q.ty==="vf" ? " (respuesta +" + base + ", justificación +" + 5*(qCtx.team.boost?2:1) + ")" : "");
+  $("q-extra").innerHTML = "";
+  $("q-answers").innerHTML = "";
+  $("q-hint").classList.remove("show");
+  $("q-hint").textContent = "";
+  const fb = $("q-feedback"); fb.className = "feedback"; fb.innerHTML = "";
+  $("btn-continue").style.display = "none";
+  $("btn-hint").disabled = false;
+  $("btn-hint").style.display = q.h ? "" : "none";
+
+  if(q.p) renderParticles(q.p, $("q-extra"));
+  renderGasLawVisual(q, $("q-extra"));
+  renderAnswerUI(q);
+
+  // temporizador de pregunta
+  clearInterval(qTimerInt);
+  const qt = $("q-timer");
+  if(state.cfg.qTimer){
+    let secs = (["num","order","error","oral"].includes(q.ty)) ? 90 : 60;
+    qt.style.display = ""; qt.classList.remove("low"); qt.textContent = secs;
+    qTimerInt = setInterval(()=>{
+      if(state.paused) return;
+      secs--; qt.textContent = secs;
+      if(secs<=10){ qt.classList.add("low"); sfx.tick(); }
+      if(secs<=0){ clearInterval(qTimerInt); timeOut(); }
+    },1000);
+  } else qt.style.display = "none";
+
+  document.body.classList.toggle("night", !!opts.night);
+  $("q-overlay").classList.add("open");
+}
+
+function renderParticles(boxes, container){
+  const wrap = document.createElement("div");
+  wrap.className = "pboxes";
+  boxes.forEach(b=>{
+    const w = document.createElement("div"); w.className = "pbox-wrap";
+    const box = document.createElement("div"); box.className = "pbox";
+    for(let i=0;i<b.n;i++){
+      const d = document.createElement("div"); d.className = "pdot";
+      let x,y;
+      if(b.mode==="liquid"){ x = 8+Math.random()*115; y = 95+Math.random()*38; d.classList.add("slow"); }
+      else if(b.mode==="compressed"){ x = 45+Math.random()*50; y = 45+Math.random()*50; }
+      else if(b.mode==="hot"||b.mode==="hotsame"){ x = 8+Math.random()*120; y = 8+Math.random()*120; d.classList.add("hot"); }
+      else if(b.mode==="slow"){ x = 8+Math.random()*120; y = 8+Math.random()*120; d.classList.add("slow"); }
+      else { x = 8+Math.random()*120; y = 8+Math.random()*120; }
+      d.style.left = x+"px"; d.style.top = y+"px";
+      d.style.animationDelay = (Math.random()*0.8)+"s";
+      box.appendChild(d);
+    }
+    if(b.mode==="compressed"){
+      const line = document.createElement("div");
+      line.style.cssText = "position:absolute;left:38px;top:0;bottom:0;width:5px;background:var(--stone-d);";
+      box.appendChild(line);
+    }
+    const lbl = document.createElement("div"); lbl.textContent = b.label;
+    w.appendChild(box); w.appendChild(lbl);
+    wrap.appendChild(w);
+  });
+  container.appendChild(wrap);
+}
+
+function renderGasLawVisual(q, container){
+  if(!["boy","cha","gay"].includes(q.t)) return;
+  const meta = {
+    boy:{cls:"gas-law-boy", title:"Ley de Boyle", text:"Menor volumen concentra las partículas en menos espacio: aumentan los choques y sube la presión."},
+    cha:{cls:"gas-law-cha", title:"Ley de Charles", text:"Al subir la temperatura, las partículas se mueven más rápido y un recipiente flexible aumenta su volumen."},
+    gay:{cls:"gas-law-gay", title:"Ley de Gay-Lussac", text:"En un recipiente rígido, el volumen no cambia; al subir la temperatura aumentan los choques y la presión."}
+  }[q.t];
+  const wrap = document.createElement("div");
+  wrap.className = "gas-visual " + meta.cls;
+  wrap.innerHTML = `<div class="gas-chamber" aria-hidden="true">
+    <span class="gas-dot"></span><span class="gas-dot"></span><span class="gas-dot"></span>
+    <span class="gas-dot"></span><span class="gas-dot"></span><span class="gas-dot"></span>
+  </div>
+  <div class="gas-note"><strong>${meta.title}</strong><br>${meta.text}</div>`;
+  container.appendChild(wrap);
+}
+
+function renderAnswerUI(q){
+  const A = $("q-answers");
+  if(q.ty==="mc" || q.ty==="particle"){
+    const div = document.createElement("div"); div.className = "opts";
+    q.o.forEach((op,i)=>{
+      const b = document.createElement("button"); b.className = "opt";
+      b.innerHTML = `<span class="letter">${"ABCD"[i]}</span>${op}`;
+      b.addEventListener("click", ()=>answerMC(i, b));
+      div.appendChild(b);
+    });
+    A.appendChild(div);
+  }
+  else if(q.ty==="vf"){
+    const div = document.createElement("div"); div.className = "vf-btns";
+    [["✅ Verdadero",true],["❌ Falso",false]].forEach(([txt,val])=>{
+      const b = document.createElement("button"); b.className = "btn " + (val?"":"red");
+      b.textContent = txt;
+      b.addEventListener("click", ()=>answerVF(val));
+      div.appendChild(b);
+    });
+    A.appendChild(div);
+    const note = document.createElement("p");
+    note.style.cssText = "text-align:center; margin-top:10px; font-size:.9rem;";
+    note.textContent = "El equipo debe justificar su respuesta en voz alta.";
+    A.appendChild(note);
+  }
+  else if(q.ty==="num"){
+    const div = document.createElement("div"); div.className = "num-answer";
+    div.innerHTML = `<label for="num-in" style="font-weight:bold;">Respuesta:</label>
+      <input type="number" step="any" id="num-in" autocomplete="off">
+      <span class="unit">${q.u||""}</span>`;
+    const b = document.createElement("button"); b.className = "btn"; b.textContent = "Comprobar";
+    b.addEventListener("click", answerNum);
+    div.appendChild(b);
+    A.appendChild(div);
+    const note = document.createElement("p");
+    note.style.cssText = "margin-top:10px; font-size:.9rem;";
+    note.textContent = "💡 Resuelvan en el cuaderno o en el tablero y escriban aquí solo el resultado.";
+    A.appendChild(note);
+  }
+  else if(q.ty==="order"){
+    qCtx.orderPick = [];
+    qCtx.orderCorrect = q.o.slice();
+    const list = document.createElement("div"); list.className = "order-list";
+    shuffle(q.o.map((s,i)=>({s,i}))).forEach(item=>{
+      const el = document.createElement("div"); el.className = "order-item";
+      el.innerHTML = `<span class="onum">?</span><span>${item.s}</span>`;
+      el.addEventListener("click", ()=>{
+        if(el.classList.contains("picked") || qCtx.answered) return;
+        qCtx.orderPick.push(item.i);
+        el.classList.add("picked");
+        el.querySelector(".onum").textContent = qCtx.orderPick.length;
+        if(qCtx.orderPick.length === q.o.length) answerOrder();
+      });
+      list.appendChild(el);
+    });
+    A.appendChild(list);
+    const note = document.createElement("p"); note.className = "order-picked";
+    note.textContent = "Toquen los pasos en el orden correcto (del primero al último).";
+    A.appendChild(note);
+  }
+  else if(q.ty==="oral" || q.ty==="error"){
+    const jb = document.createElement("div"); jb.className = "judge-box";
+    const max = PTS[q.ty] * (qCtx.team.boost?2:1);
+    jb.innerHTML = `<div class="jtitle">🗣️ El equipo responde en voz alta. Luego, la docente valora:</div>`;
+    const btns = document.createElement("div"); btns.className = "judge-btns";
+    [[`✅ Completa (+${max})`, max, true],
+     [`🟡 Parcial (+${Math.round(max/2)})`, Math.round(max/2), true],
+     ["❌ Incorrecta (0)", 0, false]].forEach(([txt,pts,ok])=>{
+      const b = document.createElement("button"); b.className = "btn small " + (pts===0?"red": pts===max?"":"gold");
+      b.textContent = txt;
+      b.addEventListener("click", ()=>answerJudged(pts, ok));
+      btns.appendChild(b);
+    });
+    jb.appendChild(btns);
+    A.appendChild(jb);
+  }
+}
+
+/* ---------- Respuestas por tipo ---------- */
+function lockOpts(){ document.querySelectorAll("#q-answers .opt, #q-answers .btn").forEach(b=>b.disabled = true); }
+
+function answerMC(i, btn){
+  if(qCtx.answered) return; qCtx.answered = true;
+  clearInterval(qTimerInt);
+  const ok = i === qCtx.q.a;
+  lockOpts();
+  btn.classList.add(ok ? "sel-ok" : "sel-bad");
+  if(!ok){
+    const opts = document.querySelectorAll("#q-answers .opt");
+    opts[qCtx.q.a].classList.add("sel-ok");
+  }
+  finishQuestion(ok, ok ? PTS.mc : 0);
+}
+
+function answerVF(val){
+  if(qCtx.answered) return; qCtx.answered = true;
+  clearInterval(qTimerInt);
+  lockOpts();
+  const ok = val === qCtx.q.a;
+  finishQuestion(ok, ok ? PTS.vf : 0, {vfJustify: ok});
+}
+
+function answerNum(){
+  if(qCtx.answered) return;
+  const val = parseFloat(String($("num-in").value).replace(",","."));
+  if(isNaN(val)){ toast("Escriban un número antes de comprobar."); return; }
+  qCtx.answered = true;
+  clearInterval(qTimerInt);
+  lockOpts();
+  const ok = Math.abs(val - qCtx.q.a) <= Math.max(Math.abs(qCtx.q.a)*0.02, 0.05);
+  finishQuestion(ok, ok ? PTS.num : 0);
+}
+
+function answerOrder(){
+  qCtx.answered = true;
+  clearInterval(qTimerInt);
+  const ok = qCtx.orderPick.every((v,idx)=>v===idx);
+  finishQuestion(ok, ok ? PTS.order : 0);
+}
+
+function answerJudged(pts, ok){
+  if(qCtx.answered) return; qCtx.answered = true;
+  clearInterval(qTimerInt);
+  lockOpts();
+  finishQuestion(ok && pts>0, pts, {judged:true});
+}
+
+function timeOut(){
+  if(!qCtx || qCtx.answered) return;
+  qCtx.answered = true;
+  lockOpts();
+  sfx.bad();
+  finishQuestion(false, 0, {timeout:true});
+}
+
+/* ---------- Cierre de pregunta: puntos, feedback, estadísticas ---------- */
+function finishQuestion(ok, pts, extra={}){
+  const q = qCtx.q, tm = qCtx.team;
+  const boost = tm.boost; 
+  let earned = extra.judged ? pts : pts * (boost?2:1);
+  if(qCtx.hintUsed) earned = Math.max(0, earned-5);
+  if(boost) tm.boost = false;
+
+  // estadísticas por tema
+  const st = tm.stats[q.t];
+  if(st){ st.tot++; if(ok) st.ok++; qCtx.counted = true; }
+
+  if(ok){
+    tm.pts += earned;
+    sfx.ok();
+    giveMaterial(tm,1);
+    if(["num","order","error"].includes(q.ty)){ tm.crystals++; }
+    animateTeamToken(state.turn, "celebrate");
+  } else {
+    sfx.bad();
+    animateTeamToken(state.turn, "oops");
+  }
+
+  // feedback
+  const fb = $("q-feedback");
+  fb.className = "feedback " + (ok ? "ok" : "bad");
+  let html = `<div class="fb-title">${ok ? "✅ ¡Correcto! +"+earned+" puntos" : (extra.timeout ? "⏰ Se acabó el tiempo" : "❌ Incorrecto")}</div>`;
+  html += `<p>${q.e}</p>`;
+  if(q.s){
+    html += `<p style="margin-top:8px;"><strong>Procedimiento paso a paso:</strong></p><ol>` +
+            q.s.map(s=>`<li>${s}</li>`).join("") + `</ol>`;
+  }
+  if(ok) html += `<p style="margin-top:8px;">🎒 Recompensa: 1 material${["num","order","error"].includes(q.ty) ? " y 1 💎 cristal de energía" : ""}.</p>`;
+  else if(!qCtx.hintUsed && q.h) html += `<p style="margin-top:8px;">💡 <strong>Pista para la próxima:</strong> ${q.h}</p>`;
+  fb.innerHTML = html;
+
+  // botón +5 justificación (V/F correcto)
+  if(extra.vfJustify){
+    const jb = document.createElement("button");
+    jb.className = "btn small gold"; jb.style.marginTop = "10px";
+    const plus = 5*(boost?2:1);
+    jb.textContent = `⭐ Justificación adecuada (+${plus})`;
+    jb.addEventListener("click", ()=>{ tm.pts += plus; jb.disabled = true; jb.textContent = "⭐ Justificación premiada"; renderHUD(); sfx.ok(); });
+    fb.appendChild(jb);
+  }
+
+  $("btn-hint").disabled = true;
+  $("btn-continue").style.display = "";
+  renderHUD();
+
+  // cadena del derrumbe
+  if(state.chain){
+    if(ok){
+      state.chain.left--;
+      if(state.chain.left<=0){
+        const bonus = 25;
+        tm.pts += bonus;
+        fb.innerHTML += `<p style="margin-top:8px;"><strong>⛏️ ¡Superaron el derrumbe! Recuperan sus materiales y ganan +${bonus} puntos de reto colaborativo.</strong></p>`;
+        state.chain = null; sfx.chest();
+      } else {
+        fb.innerHTML += `<p style="margin-top:8px;"><strong>⛏️ ¡Bien! Falta 1 respuesta correcta más para salir del derrumbe.</strong></p>`;
+      }
+    } else {
+      loseMaterials(tm,2);
+      fb.innerHTML += `<p style="margin-top:8px;"><strong>💥 El derrumbe se llevó 2 materiales del equipo.</strong></p>`;
+      state.chain = null;
+    }
+    renderHUD();
+  }
+}
+
+$("btn-continue").addEventListener("click", ()=>{
+  $("q-overlay").classList.remove("open");
+  document.body.classList.remove("night");
+  clearInterval(qTimerInt);
+  if(state.chain && state.chain.left>0){
+    // segunda pregunta del derrumbe, mismo equipo
+    setTimeout(()=>askQuestion(pickQuestion(rnd(state.cfg.topics)), {chainStep:true}), 300);
+  } else {
+    if(qCtx && qCtx.tiebreak){ qCtx = null; return; }
+    qCtx = null;
+    nextTurn();
+  }
+});
+
+$("btn-hint").addEventListener("click", ()=>{
+  if(!qCtx || qCtx.answered) return;
+  qCtx.hintUsed = true;
+  $("q-hint").textContent = "💡 Pista: " + qCtx.q.h + "  (−5 puntos si aciertan)";
+  $("q-hint").classList.add("show");
+  $("btn-hint").disabled = true;
+});
+
+$("btn-annul").addEventListener("click", ()=>{
+  clearInterval(qTimerInt);
+  $("q-overlay").classList.remove("open");
+  document.body.classList.remove("night");
+  toast("🚫 Pregunta anulada: no afecta puntajes ni estadísticas.");
+  state.chain = null;
+  const wasTiebreak = qCtx && qCtx.tiebreak;
+  qCtx = null;
+  if(!wasTiebreak) nextTurn();
+});
+
+/* ---------- Materiales ---------- */
+function giveMaterial(tm, n){
+  for(let i=0;i<n;i++){
+    const k = rnd(Object.keys(MATS));
+    tm.mats[k]++;
+  }
+}
+function loseMaterials(tm, n){
+  for(let i=0;i<n;i++){
+    const owned = Object.keys(MATS).filter(k=>tm.mats[k]>0);
+    if(!owned.length) return;
+    tm.mats[rnd(owned)]--;
+  }
+}
+
+/* ---------- Cofre científico ---------- */
+function openChest(){
+  const tm = state.teams[state.turn];
+  const rewards = [
+    {txt:"¡2 materiales para el laboratorio!", fn:()=>giveMaterial(tm,2)},
+    {txt:"¡Un cristal de energía! 💎", fn:()=>tm.crystals++},
+    {txt:"¡+10 puntos de exploración!", fn:()=>tm.pts+=10},
+    {txt:"Tarjeta de ventaja ✨: ¡la próxima pregunta del equipo vale doble!", fn:()=>tm.boost=true},
+    {txt:"¡3 materiales! La mina fue generosa.", fn:()=>giveMaterial(tm,3)},
+    {txt:"¡1 material y 1 cristal! 💎", fn:()=>{giveMaterial(tm,1); tm.crystals++;}}
+  ];
+  const r = rnd(rewards);
+  r.fn(); sfx.chest(); renderHUD();
+  centerModal(`
+    <div class="big-emoji">🎁</div>
+    <h2>Cofre científico</h2>
+    <p style="font-size:1.15rem;"><strong>${tm.name}</strong> abre el cofre y encuentra…</p>
+    <p style="font-size:1.25rem; margin-top:8px;">${r.txt}</p>
+    <div style="margin-top:16px;"><button class="btn" onclick="closeCenter(); nextTurn();">Continuar ➡️</button></div>`);
+}
+
+/* ---------- Zona de construcción ---------- */
+function labPreview(tm){
+  const pieces = tm.builds.length
+    ? tm.builds.map((id,idx)=>{
+        const b = BUILDS.find(x=>x.id===id);
+        return b ? `<span class="lab-piece" style="animation-delay:${idx*0.06}s" title="${b.n}">${b.icon}</span>` : "";
+      }).join("")
+    : `<span style="position:relative;z-index:2;color:#b8cad8;">Aún sin piezas construidas</span>`;
+  return `<div class="lab-preview" aria-label="Laboratorio construido por ${tm.name}">${pieces}</div>`;
+}
+
+function openBuild(){
+  const tm = state.teams[state.turn];
+  let html = `<div class="big-emoji">🏗️</div><h2>Zona de construcción</h2>
+    <p><strong>${tm.name}</strong> — materiales: ${matsStr(tm.mats)}</p>
+    <p style="font-size:.9rem;">Cada construcción vale <strong>+15 puntos</strong> al final de la partida.</p>
+    ${labPreview(tm)}
+    <div class="build-grid">`;
+  BUILDS.forEach(b=>{
+    const built = tm.builds.includes(b.id);
+    const can = !built && Object.entries(b.cost).every(([k,v])=>tm.mats[k]>=v);
+    const costTxt = Object.entries(b.cost).map(([k,v])=>`${MATS[k].icon}×${v}`).join(" ");
+    html += `<div class="build-item">
+      <div class="bname">${b.icon} ${b.n}</div>
+      <div class="bcost">Costo: ${costTxt}</div>
+      ${built ? `<span class="built-tag">✅ Construido</span>`
+              : `<button class="btn small ${can?"":"stone"}" ${can?"":"disabled"} onclick="doBuild('${b.id}')">Construir</button>`}
+    </div>`;
+  });
+  html += `</div><button class="btn" onclick="closeCenter(); nextTurn();">Terminar turno ➡️</button>`;
+  centerModal(html);
+}
+function doBuild(id){
+  const tm = state.teams[state.turn];
+  const b = BUILDS.find(x=>x.id===id);
+  if(!b || tm.builds.includes(id)) return;
+  if(!Object.entries(b.cost).every(([k,v])=>tm.mats[k]>=v)) return;
+  Object.entries(b.cost).forEach(([k,v])=>tm.mats[k]-=v);
+  tm.builds.push(id);
+  sfx.chest(); renderHUD();
+  toast(`🏗️ ${tm.name} construyó: ${b.icon} ${b.n} (+15 pts al final)`);
+  openBuild();
+}
+
+/* ---------- Eventos especiales ---------- */
+function openEvent(){
+  sfx.event();
+  const ev = rnd(["night","rush","collapse"]);
+  if(ev==="night"){
+    const data = rnd(NIGHT_EVENTS);
+    centerModal(`
+      <div class="big-emoji">🌙</div>
+      <h2>Noche de partículas</h2>
+      <p>La pantalla se oscurece… Observen el modelo de partículas e identifiquen qué variable cambió. <strong>(+10 puntos)</strong></p>
+      <div style="margin-top:14px;"><button class="btn" onclick="closeCenter(); startNight();">Observar 🔭</button></div>`, true);
+    state._night = data;
+  }
+  else if(ev==="rush"){
+    const data = rnd(RUSH_EVENTS);
+    centerModal(`
+      <div class="big-emoji">⏱️</div>
+      <h2>Construcción contrarreloj</h2>
+      <p>Reto colaborativo: 60 segundos para organizar las piezas en el orden correcto. <strong>(+25 puntos)</strong></p>
+      <div style="margin-top:14px;"><button class="btn" onclick="closeCenter(); startRush();">¡A construir! 🧱</button></div>`);
+    state._rush = data;
+  }
+  else {
+    centerModal(`
+      <div class="big-emoji">💥</div>
+      <h2>¡Derrumbe de la mina!</h2>
+      <p>Los materiales del equipo quedaron atrapados. Para recuperarlos deben responder correctamente <strong>2 preguntas consecutivas</strong> (+25 puntos si lo logran; si fallan, pierden 2 materiales).</p>
+      <div style="margin-top:14px;"><button class="btn red" onclick="closeCenter(); startCollapse();">⛏️ ¡A excavar!</button></div>`);
+  }
+}
+function startNight(){
+  const data = state._night;
+  askQuestion({t:"car", d:2, ty:"mc", q:data.q, o:data.o, a:data.a, p:data.p,
+    h:"Comparen: número de partículas, espacio que ocupan y velocidad.", e:data.e}, {night:true});
+}
+function startRush(){
+  const data = state._rush;
+  const q = {t:"des", d:2, ty:"order", q:data.q, o:data.o, h:"Piensen en causa → efecto.", e:data.e};
+  askQuestion(q);
+  // forzar 60 s aunque el orden normalmente da 90
+  if(state.cfg.qTimer){
+    clearInterval(qTimerInt);
+    let secs = 60; const qt = $("q-timer");
+    qt.style.display = ""; qt.classList.remove("low"); qt.textContent = secs;
+    qTimerInt = setInterval(()=>{
+      if(state.paused) return;
+      secs--; qt.textContent = secs;
+      if(secs<=10){ qt.classList.add("low"); sfx.tick(); }
+      if(secs<=0){ clearInterval(qTimerInt); timeOut(); }
+    },1000);
+  }
+}
+function startCollapse(){
+  state.chain = {left:2};
+  askQuestion(pickQuestion(rnd(state.cfg.topics)), {chainStep:true});
+}
+
+/* ---------- Modal central genérico ---------- */
+function centerModal(html, night){
+  $("c-modal").innerHTML = html;
+  $("c-overlay").classList.add("open");
+  document.body.classList.toggle("night", !!night);
+}
+function closeCenter(){
+  $("c-overlay").classList.remove("open");
+  document.body.classList.remove("night");
+}
+
+/* ---------- Toast ---------- */
+let toastTO = null;
+function toast(msg){
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTO);
+  toastTO = setTimeout(()=>t.classList.remove("show"), 3500);
+}
+</script>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN, JEFE FINAL, INFORME Y PANEL DOCENTE
+   ============================================================ */
+
+/* ---------- Pantalla de configuración ---------- */
+function chipGroup(id, single=true){
+  const g = $(id);
+  g.addEventListener("click", e=>{
+    const c = e.target.closest(".chip"); if(!c) return;
+    if(single){ g.querySelectorAll(".chip").forEach(x=>x.classList.remove("on")); c.classList.add("on"); }
+    else c.classList.toggle("on");
+  });
+  g.addEventListener("keydown", e=>{
+    if(e.key==="Enter"||e.key===" "){ e.preventDefault(); e.target.click(); }
+  });
+}
+["cfg-duration","cfg-dif","cfg-qtimer","cfg-sound"].forEach(id=>chipGroup(id,true));
+chipGroup("cfg-topics", false);
+
+function renderTeamNameInputs(){
+  const n = parseInt($("cfg-nteams").value);
+  const box = $("team-names");
+  const prev = [...box.querySelectorAll("input[type=text]")].map(i=>i.value);
+  const prevColors = [...box.querySelectorAll(".team-color")].map(i=>i.value);
+  const prevAvatars = [...box.querySelectorAll(".team-avatar")].map(i=>i.value);
+  const prevBadges = [...box.querySelectorAll(".team-badge")].map(i=>i.value);
+  box.innerHTML = "";
+  const defaults = ["Los Mineros","Exploradores del Volcán","Guardianes del Valle","Cristales del Bosque","Cazadores de Presión","Alquimistas"];
+  for(let i=0;i<n;i++){
+    const color = prevColors[i] || TEAM_COLORS[i];
+    const avatar = prevAvatars[i] || TEAM_AVATARS[i];
+    const badge = prevBadges[i] || TEAM_BADGES[i];
+    const row = document.createElement("div"); row.className = "team-name-row";
+    row.innerHTML = `<span class="team-dot" style="background:${color}"></span>
+      <input type="text" maxlength="24" value="${prev[i]||defaults[i]}" aria-label="Nombre del equipo ${i+1}">
+      <input class="team-color" type="color" value="${color}" aria-label="Color del equipo ${i+1}">
+      <select class="team-avatar" aria-label="Avatar del equipo ${i+1}">
+        ${TEAM_AVATARS.map(a=>`<option value="${a}" ${a===avatar?"selected":""}>${a} Avatar</option>`).join("")}
+      </select>
+      <select class="team-badge" aria-label="Insignia del equipo ${i+1}">
+        ${TEAM_BADGES.map(b=>`<option value="${b}" ${b===badge?"selected":""}>${b}</option>`).join("")}
+      </select>
+      <div class="team-preview">
+        <div class="mini-avatar" style="--team-color:${color}" data-avatar="${avatar}" data-badge="${badge}"></div>
+        <div><strong>Vista previa</strong><br><span>${prev[i]||defaults[i]}</span></div>
+      </div>`;
+    box.appendChild(row);
+  }
+  updateTeamPreviews();
+}
+$("cfg-nteams").addEventListener("change", renderTeamNameInputs);
+renderTeamNameInputs();
+
+function updateTeamPreviews(){
+  $("team-names").querySelectorAll(".team-name-row").forEach(row=>{
+    const color = row.querySelector(".team-color").value;
+    const avatar = row.querySelector(".team-avatar").value;
+    const badge = row.querySelector(".team-badge").value;
+    const name = row.querySelector("input[type=text]").value || "Equipo";
+    row.querySelector(".team-dot").style.background = color;
+    const preview = row.querySelector(".mini-avatar");
+    preview.style.setProperty("--team-color", color);
+    preview.dataset.avatar = avatar;
+    preview.dataset.badge = badge;
+    row.querySelector(".team-preview span").textContent = name;
+  });
+}
+$("team-names").addEventListener("input", updateTeamPreviews);
+$("team-names").addEventListener("change", updateTeamPreviews);
+
+function readConfig(){
+  const chipVal = id => $(id).querySelector(".chip.on")?.dataset.v;
+  const topics = [...$("cfg-topics").querySelectorAll(".chip.on")].map(c=>c.dataset.v);
+  return {
+    teamNames: [...$("team-names").querySelectorAll("input[type=text]")].map((i,idx)=>i.value.trim()||("Equipo "+(idx+1))),
+    teamColors: [...$("team-names").querySelectorAll(".team-color")].map(i=>i.value),
+    teamAvatars: [...$("team-names").querySelectorAll(".team-avatar")].map(i=>i.value),
+    teamBadges: [...$("team-names").querySelectorAll(".team-badge")].map(i=>i.value),
+    minutes: parseInt(chipVal("cfg-duration")||"30"),
+    dif: parseInt(chipVal("cfg-dif")||"2"),
+    qTimer: chipVal("cfg-qtimer")==="on",
+    sound: chipVal("cfg-sound")==="on",
+    effects: true,
+    reducedMotion: false,
+    volume: 0.75,
+    topics: topics.length? topics : ["car"]
+  };
+}
+
+$("btn-start").addEventListener("click", ()=>{
+  const cfg = readConfig();
+  if(!cfg.topics.length){ toast("Selecciona al menos un tema."); return; }
+  state = newState(cfg);
+  applyFxSettings();
+  showScreen("screen-game");
+  buildBoard(); renderHUD(); fillTeacherTeams(); startClock();
+  toast("⛏️ ¡Comienza la expedición! Turno de " + state.teams[0].name);
+});
+$("btn-hero-start").addEventListener("click", ()=>$("btn-start").click());
+$("btn-hero-teams").addEventListener("click", ()=>$("team-names").scrollIntoView({behavior:"smooth", block:"center"}));
+$("btn-hero-panel").addEventListener("click", ()=>$("teacher-panel").classList.add("open"));
+
+/* ---------- Cambio de pantallas ---------- */
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  $(id).classList.add("active");
+  if(id==="screen-game") requestAnimationFrame(placeTokens);
+}
+
+/* ---------- Pausa ---------- */
+function togglePause(){
+  if(!state || state.phase!=="board") return;
+  state.paused = !state.paused;
+  if(state.paused){
+    centerModal(`<div class="big-emoji">⏸️</div><h2>Juego en pausa</h2>
+      <p>El reloj de la partida y los temporizadores están detenidos.</p>
+      <div style="margin-top:16px;"><button class="btn" onclick="togglePause()">▶️ Reanudar</button></div>`);
+  } else closeCenter();
+}
+$("btn-pause").addEventListener("click", togglePause);
+
+/* ---------- Jefe final ---------- */
+function startBoss(){
+  state.phase = "boss";
+  state.bossIdx = 0; state.bossHP = 100; state.bossHits = {};
+  clearInterval(clockInt); clearInterval(qTimerInt);
+  $("q-overlay").classList.remove("open"); closeCenter();
+  showScreen("screen-boss");
+  sfx.boss();
+  renderBossQ();
+}
+$("btn-boss-now").addEventListener("click", ()=>{
+  centerModal(`<div class="big-emoji">🛡️</div><h2>¿Ir al jefe final?</h2>
+    <p>Terminará la fase de exploración y todos los equipos enfrentarán al Guardián de la Presión.</p>
+    <div style="margin-top:16px;">
+      <button class="btn red" onclick="closeCenter(); startBoss();">🛡️ Sí, ¡al Guardián!</button>
+      <button class="btn stone" onclick="closeCenter()">Seguir explorando</button>
+    </div>`);
+});
+
+function renderBossQ(){
+  const i = state.bossIdx, bq = BOSS_QUESTIONS[i];
+  $("boss-q-count").textContent = `Pregunta ${i+1} de ${BOSS_QUESTIONS.length}`;
+  $("boss-q-text").textContent = bq.q;
+  const ans = $("boss-q-answer"); ans.style.display = "none"; ans.innerHTML = "";
+  const bt = $("boss-teams"); bt.innerHTML = "";
+  state.teams.forEach((tm,ti)=>{
+    const b = document.createElement("button");
+    b.className = "boss-team-btn";
+    b.style.borderColor = tm.color;
+    b.textContent = tm.name;
+    b.addEventListener("click", ()=>{
+      const key = i+"-"+ti;
+      const bonus = 25;
+      const dmg = Math.ceil(100/(BOSS_QUESTIONS.length*state.teams.length));
+      if(state.bossHits[key]){ // deshacer
+        delete state.bossHits[key];
+        tm.pts -= bonus;
+        state.bossHP = Math.min(100, state.bossHP + dmg);
+        b.classList.remove("hit");
+        sfx.tick();
+      } else {
+        state.bossHits[key] = true;
+        tm.pts += bonus;
+        state.bossHP = Math.max(0, state.bossHP - dmg);
+        b.classList.add("hit");
+        sfx.ok();
+      }
+      const hp = $("boss-hp");
+      hp.style.width = state.bossHP + "%";
+      hp.textContent = "Energía del Guardián: " + state.bossHP + "%";
+      saveGame();
+    });
+    bt.appendChild(b);
+  });
+  $("boss-next").textContent = i === BOSS_QUESTIONS.length-1 ? "🏆 Ver informe final" : "Siguiente pregunta ➡️";
+}
+$("boss-show-answer").addEventListener("click", ()=>{
+  const ans = $("boss-q-answer");
+  ans.style.display = "block";
+  ans.innerHTML = "<strong>Respuesta esperada:</strong> " + BOSS_QUESTIONS[state.bossIdx].a;
+});
+$("boss-next").addEventListener("click", ()=>{
+  if(state.bossIdx < BOSS_QUESTIONS.length-1){
+    state.bossIdx++;
+    renderBossQ();
+  } else {
+    if(state.bossHP<=0) toast("🎉 ¡El Guardián fue estabilizado y el Reino recuperó su energía!");
+    showReport();
+  }
+});
+
+/* ---------- Informe final ---------- */
+function showReport(){
+  state.phase = "report";
+  // sumar bonos de construcción
+  state.teams.forEach(tm=>{
+    if(!tm._buildBonusGiven){ tm.pts += tm.builds.length*15; tm._buildBonusGiven = true; }
+  });
+  showScreen("screen-report");
+
+  const sorted = [...state.teams].sort((a,b)=>b.pts-a.pts || b.crystals-a.crystals);
+  const medals = ["🥇","🥈","🥉","🏅","🏅","🏅"];
+  $("report-podium").innerHTML = sorted.map((tm,i)=>`
+    <div class="team-card" style="--team-color:${tm.color};border-color:${tm.color}">
+      <div class="tname">${medals[i]} <span class="hud-avatar" style="--team-color:${tm.color}">${tm.avatar||"🧪"}</span><span class="team-dot" style="background:${tm.color}"></span>${tm.name}</div>
+      <div class="tstats"><span>⭐ ${tm.pts} pts</span><span>💎 ${tm.crystals}</span></div>
+      <div class="mats">🏗️ ${tm.builds.length ? tm.builds.map(id=>BUILDS.find(b=>b.id===id).icon).join(" ") : "sin construcciones"} ${tm.builds.length? "(+"+tm.builds.length*15+" pts)":""}</div>
+      ${labPreview(tm)}
+    </div>`).join("");
+
+  // desempeño global por tema
+  let html = "", weak = [];
+  Object.keys(TOPICS).forEach(k=>{
+    let ok=0, tot=0;
+    state.teams.forEach(tm=>{ ok+=tm.stats[k].ok; tot+=tm.stats[k].tot; });
+    const pct = tot ? Math.round(ok/tot*100) : null;
+    if(pct!==null && pct<60) weak.push(TOPICS[k].name);
+    html += `<div class="report-topic">
+      <div class="rt-label"><span>${TOPICS[k].name}</span><span>${tot? ok+" / "+tot+" ("+pct+"%)" : "sin preguntas en esta partida"}</span></div>
+      <div class="rt-bar-bg"><div class="rt-bar" style="width:${pct??0}%; background:${pct===null?"#bbb": pct>=80?"var(--ok)": pct>=60?"var(--gold)":"var(--bad)"};">${pct!==null? pct+"%":""}</div></div>
+    </div>`;
+  });
+  $("report-topics").innerHTML = html;
+  $("report-reinforce").innerHTML = weak.length
+    ? `<strong>📌 Temas que necesitan refuerzo (menos del 60 % de aciertos):</strong> ${weak.join(" · ")}.`
+    : `<strong>🎉 ¡Excelente!</strong> Todos los temas superaron el 60 % de aciertos. Se sugiere solo un repaso ligero antes de la evaluación.`;
+
+  // tabla por equipo
+  let tbl = `<tr><th>Equipo</th><th>Puntos</th><th>Aciertos</th><th>💎</th>` +
+    Object.values(TOPICS).map(t=>`<th>${t.name.split(" ").slice(-1)[0]==="gases"?"Caract.":t.name.replace("Ley de ","").replace("Despeje de variables","Despeje")}</th>`).join("") + `</tr>`;
+  sorted.forEach(tm=>{
+    let ok=0, tot=0;
+    Object.keys(TOPICS).forEach(k=>{ ok+=tm.stats[k].ok; tot+=tm.stats[k].tot; });
+    tbl += `<tr><td style="font-weight:bold;">${tm.name}</td><td>${tm.pts}</td><td>${ok} / ${tot}</td><td>${tm.crystals}</td>` +
+      Object.keys(TOPICS).map(k=>{
+        const s = tm.stats[k];
+        return `<td>${s.tot? Math.round(s.ok/s.tot*100)+"%" : "—"}</td>`;
+      }).join("") + `</tr>`;
+  });
+  $("report-table").innerHTML = tbl;
+  try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+}
+$("btn-restart-report").addEventListener("click", ()=>location.reload());
+
+/* ---------- Panel docente ---------- */
+const panel = $("teacher-panel");
+$("teacher-fab").addEventListener("click", ()=>panel.classList.toggle("open"));
+$("tp-close").addEventListener("click", ()=>panel.classList.remove("open"));
+document.addEventListener("keydown", e=>{
+  if((e.key==="p"||e.key==="P") && !e.target.matches("input, select, textarea")) panel.classList.toggle("open");
+});
+function fillTeacherTeams(){
+  $("tp-team").innerHTML = state.teams.map((tm,i)=>`<option value="${i}">${tm.name}</option>`).join("");
+  syncFxControls();
+}
+function renderTeacherPerf(){
+  if(!state) return;
+  $("tp-perf").innerHTML = state.teams.map(tm=>{
+    const parts = Object.keys(TOPICS).map(k=>{
+      const s = tm.stats[k];
+      return s.tot? `${k.toUpperCase()}: ${s.ok}/${s.tot}` : null;
+    }).filter(Boolean).join(" · ");
+    return `<strong style="color:${tm.color}">■</strong> ${tm.name}: ${parts||"sin datos aún"}`;
+  }).join("<br>");
+}
+function ensureFxConfig(){
+  if(!state) return null;
+  state.cfg.sound = state.cfg.sound !== false;
+  state.cfg.effects = state.cfg.effects !== false;
+  state.cfg.reducedMotion = !!state.cfg.reducedMotion;
+  state.cfg.volume = Number.isFinite(state.cfg.volume) ? state.cfg.volume : 0.75;
+  return state.cfg;
+}
+function applyFxSettings(){
+  const cfg = ensureFxConfig();
+  if(!cfg) return;
+  document.body.classList.toggle("fx-off", !cfg.effects);
+  document.body.classList.toggle("motion-reduced", !!cfg.reducedMotion);
+  syncFxControls();
+  saveGame();
+}
+function syncFxControls(){
+  if(!$("tp-reduce-motion")) return;
+  const cfg = state ? ensureFxConfig() : {sound:true,effects:true,reducedMotion:false,volume:0.75};
+  $("tp-reduce-motion").checked = !!cfg.reducedMotion;
+  $("tp-effects").checked = !cfg.effects;
+  $("tp-mute").checked = !cfg.sound;
+  $("tp-volume").value = cfg.volume;
+}
+$("tp-reduce-motion").addEventListener("change", e=>{ if(state){ ensureFxConfig().reducedMotion = e.target.checked; applyFxSettings(); } else document.body.classList.toggle("motion-reduced", e.target.checked); });
+$("tp-effects").addEventListener("change", e=>{ if(state){ ensureFxConfig().effects = !e.target.checked; applyFxSettings(); } else document.body.classList.toggle("fx-off", e.target.checked); });
+$("tp-mute").addEventListener("change", e=>{ if(state){ ensureFxConfig().sound = !e.target.checked; applyFxSettings(); } });
+$("tp-volume").addEventListener("input", e=>{ if(state){ ensureFxConfig().volume = parseFloat(e.target.value); applyFxSettings(); } });
+$("tp-pause").addEventListener("click", togglePause);
+$("tp-skip").addEventListener("click", ()=>{
+  if(!state || state.phase!=="board") return;
+  clearInterval(qTimerInt);
+  $("q-overlay").classList.remove("open");
+  document.body.classList.remove("night");
+  state.chain = null; qCtx = null;
+  nextTurn();
+  toast("⏭️ Turno cambiado por la docente.");
+});
+$("tp-newq").addEventListener("click", ()=>{
+  if(!state || state.phase!=="board") return;
+  clearInterval(qTimerInt);
+  $("q-overlay").classList.remove("open");
+  askQuestion(pickQuestion(rnd(state.cfg.topics)));
+  toast("🔄 Nueva pregunta para el mismo equipo.");
+});
+$("tp-tiebreak").addEventListener("click", ()=>{
+  if(!state) return;
+  panel.classList.remove("open");
+  const q = pickQuestion(rnd(state.cfg.topics));
+  askQuestion(q);
+  if(qCtx){ qCtx.tiebreak = true; $("q-team").textContent = "⚖️ DESEMPATE (asigna los puntos manualmente)"; }
+  toast("⚖️ Pregunta de desempate: valórala y asigna puntos con el panel.");
+});
+$("tp-give").addEventListener("click", ()=>{
+  if(!state) return;
+  const i = parseInt($("tp-team").value), p = parseInt($("tp-points").value)||0;
+  state.teams[i].pts += p;
+  renderHUD();
+  toast(`${p>=0?"➕":"➖"} ${Math.abs(p)} puntos para ${state.teams[i].name}.`);
+});
+$("tp-boss").addEventListener("click", ()=>{
+  if(!state){ toast("Inicia una expedición antes de abrir el jefe final."); return; }
+  panel.classList.remove("open"); startBoss();
+});
+$("tp-restart").addEventListener("click", ()=>{
+  if(confirm("¿Reiniciar el juego? Se perderá el progreso actual.")){
+    try{ localStorage.removeItem(SAVE_KEY); }catch(e){}
+    location.reload();
+  }
+});
+
+/* ---------- Guardado temporal (localStorage) ---------- */
+function saveGame(){
+  if(!state || state.phase==="report") return;
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){}
+}
+(function checkSave(){
+  try{
+    const s = localStorage.getItem(SAVE_KEY);
+    if(s) $("resume-box").style.display = "block";
+  }catch(e){}
+})();
+$("btn-resume").addEventListener("click", ()=>{
+  try{
+    state = JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(!state) return;
+    state.paused = false; state.chain = null;
+    applyFxSettings();
+    showScreen(state.phase==="boss" ? "screen-boss" : "screen-game");
+    if(state.phase==="boss"){ renderBossQ(); }
+    else { buildBoard(); startClock(); }
+    renderHUD(); fillTeacherTeams();
+    toast("↩️ Partida recuperada. ¡Continúa la expedición!");
+  }catch(e){ toast("No fue posible recuperar la partida."); }
+});
+</script>
+</body>
+</html>
